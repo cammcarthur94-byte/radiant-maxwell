@@ -1,6 +1,6 @@
 import { AIPlatform } from '@/types/database';
 
-export type EngineId = 'gemini' | 'perplexity' | 'chatgpt' | 'claude' | 'copilot' | 'meta';
+export type EngineId = 'gemini' | 'perplexity' | 'chatgpt' | 'claude' | 'copilot' | 'meta' | 'google_aio';
 
 export interface GroundingCitation {
   title?: string;
@@ -26,13 +26,15 @@ export interface EngineQueryRequest {
 }
 
 export interface EngineRawResult {
-  engineId: EngineId;
-  platform: AIPlatform;
-  modelName: string;
+  engineId?: EngineId;
+  engine?: EngineId;
+  platform?: AIPlatform;
+  modelName?: string;
+  model?: string;
   query: string;
   rawText: string;
   citations: GroundingCitation[];
-  isLive: boolean;
+  isLive?: boolean;
   latencyMs: number;
   tokensUsed?: {
     promptTokens: number;

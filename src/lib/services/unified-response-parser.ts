@@ -105,9 +105,9 @@ export class UnifiedResponseParser {
     const shareOfVoiceScore = this.calculateShareOfVoice(targetBrandAnalysis, competitorAnalyses);
 
     return {
-      engineId: engineResult.engineId,
-      platform: engineResult.platform,
-      modelName: engineResult.modelName,
+      engineId: engineResult.engineId || engineResult.engine || 'google_aio',
+      platform: engineResult.platform || (engineResult.engineId === 'google_aio' || engineResult.engine === 'google_aio' ? 'google_aio' : 'gemini'),
+      modelName: engineResult.modelName || engineResult.model || 'google-ai-overview',
       query: engineResult.query,
       cleanedText,
       rawText,

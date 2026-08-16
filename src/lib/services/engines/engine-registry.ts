@@ -5,6 +5,7 @@ import { OpenAIConnector } from './openai-connector';
 import { AnthropicConnector } from './anthropic-connector';
 import { CopilotConnector } from './copilot-connector';
 import { MetaConnector } from './meta-connector';
+import { GoogleAIOConnector } from './google-aio-connector';
 
 export class EngineRegistry {
   private connectors: Map<EngineId, AIModelConnector>;
@@ -12,6 +13,7 @@ export class EngineRegistry {
   constructor() {
     this.connectors = new Map<EngineId, AIModelConnector>();
     this.registerConnector(new GeminiConnector());
+    this.registerConnector(new GoogleAIOConnector());
     this.registerConnector(new PerplexityConnector());
     this.registerConnector(new OpenAIConnector());
     this.registerConnector(new AnthropicConnector());

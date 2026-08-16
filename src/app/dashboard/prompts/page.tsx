@@ -48,6 +48,7 @@ import { exportToCsv } from '@/lib/export-csv';
 import { QueryIntent } from '@/types/dashboard';
 import { PromptTemplateRecord } from '@/lib/services/prompt-service';
 import { PromptImprovementResult, PromptVariationSuggestion } from '@/lib/services/prompt-optimizer-service';
+import { GoogleAIOverviewModal } from '@/components/dashboard/GoogleAIOverviewModal';
 
 interface TrackedQueryItem {
   id: string;
@@ -63,6 +64,7 @@ interface TrackedQueryItem {
 }
 
 const PROMPT_TARGET_ENGINES = [
+  { id: 'google_aio', label: 'Google AI Overview', icon: '✨', badge: 'SERP AIO' },
   { id: 'gemini', label: 'Google Gemini', icon: '🟣', badge: 'Grounding' },
   { id: 'chatgpt', label: 'ChatGPT Search', icon: '🟢', badge: 'GPT-4o' },
   { id: 'perplexity', label: 'Perplexity AI', icon: '🔵', badge: 'Sonar Pro' },
@@ -140,12 +142,14 @@ export default function PromptsPage() {
     item?: TrackedQueryItem;
   } | null>(null);
   const [selectedPromptForDrawer, setSelectedPromptForDrawer] = useState<TrackedQueryItem | null>(null);
+  const [selectedAIOForModal, setSelectedAIOForModal] = useState<TrackedQueryItem | null>(null);
 
   // Form inputs for query
   const [newQueryInput, setNewQueryInput] = useState('');
   const [newCategoryInput, setNewCategoryInput] = useState('Commercial Intent');
   const [newIntentInput, setNewIntentInput] = useState<QueryIntent>('Brand');
   const [selectedEngineIds, setSelectedEngineIds] = useState<string[]>([
+    'google_aio',
     'gemini',
     'chatgpt',
     'perplexity',
@@ -1105,6 +1109,19 @@ export default function PromptsPage() {
                               onClick={(e) => e.stopPropagation()}
                             >
                               <div className="flex items-center justify-end gap-1">
+                                {/* View Google AI Overview Button */}
+                                <button
+                                  type="button"
+                                  onClick={() => setSelectedAIOForModal(item)}
+                                  className="p-1.5 text-cyan-700 hover:text-cyan-900 bg-cyan-50/80 hover:bg-cyan-100/80 border border-cyan-200/80 rounded-lg transition-colors cursor-pointer flex items-center gap-1 shadow-2xs"
+                                  title="View Google AI Overview Live Payload"
+                                >
+                                  <Sparkles className="w-3.5 h-3.5 text-cyan-600" />
+                                  <span className="text-[11px] font-bold hidden sm:inline">
+                                    Google AIO
+                                  </span>
+                                </button>
+
                                 {/* Inspect Response Drawer Button */}
                                 <button
                                   type="button"
@@ -1730,6 +1747,22 @@ export default function PromptsPage() {
           engine={selectedPromptForDrawer.engine}
           recommendationRank={selectedPromptForDrawer.brandRank}
           capturedAt={selectedPromptForDrawer.lastTracked}
+        />
+      )}
+
+      {/* Google AI Overview Visual Modal */}
+      {selectedAIOForModal && (
+        <GoogleAIOverviewModal
+          isOpen={!!selectedAIOForModal}
+          onClose={() => setSelectedAIOForModal(null)}
+          query={selectedAIOForModal.query}
+          brandName={activeTenant.name}
+          brandDomain={activeTenant.domain}
+          brandRank={selectedAIOForModal.brandRank}
+          capturedAt={selectedAIOForModal.lastTracked}
+          aiOverviewPresent={true}
+          isCited={true}
+          serpProvider="Google AI Overview (SERP Extraction)"
         />
       )}
     </div>

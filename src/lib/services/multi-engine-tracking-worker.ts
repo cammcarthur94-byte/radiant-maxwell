@@ -153,10 +153,10 @@ export class MultiEngineTrackingWorker {
             brandName: task.campaign.brand_name,
             query: task.query,
             engineId: task.engineId,
-            platform: engineResult.platform,
+            platform: engineResult.platform || this.mapEngineToPlatform(task.engineId),
             status: 'success' as const,
             citationId,
-            isLive: engineResult.isLive,
+            isLive: engineResult.isLive ?? false,
             brandMentioned: parsed.targetBrand.mentioned,
             prominenceScore: parsed.prominenceScore,
             prominenceTier: parsed.prominenceTier,
@@ -205,11 +205,15 @@ export class MultiEngineTrackingWorker {
     parsed: UnifiedParsedResponse,
     rawResult: EngineRawResult
   ): Promise<string> {
+    const isAIOEngine = parsed.engineId === 'google_aio' || parsed.platform === 'google_aio' || (rawResult.metadata?.ai_overview_present !== undefined);
+    const aiOverviewPresent = rawResult.metadata?.ai_overview_present ?? isAIOEngine;
+    const isCited = rawResult.metadata?.is_cited ?? parsed.targetBrand.mentioned;
+
     const citationPayload: any = {
       tenant_id: campaign.tenant_id,
       campaign_id: campaign.id,
-      ai_platform: parsed.platform,
-      model_version: rawResult.modelName,
+      ai_platform: parsed.platform || (isAIOEngine ? 'google_aio' : 'gemini'),
+      model_version: rawResult.modelName || rawResult.model || 'google-ai-overview',
       query: parsed.query,
       brand_mentioned: parsed.targetBrand.mentioned,
       sentiment: parsed.sentiment,
@@ -218,6 +222,17 @@ export class MultiEngineTrackingWorker {
       recommendation_rank: parsed.recommendationRank,
       prominence_score: parsed.prominenceScore,
       citation_urls: parsed.citations.map((c) => c.url),
+      ai_overview_present: aiOverviewPresent,
+      is_cited: isCited,
+      ai_overview_data: {
+        present: aiOverviewPresent,
+        is_cited: isCited,
+        serp_provider: rawResult.metadata?.serpProvider || (isAIOEngine ? 'google_ai_overview' : 'conversational_llm'),
+        reference_citations: parsed.citations,
+        target_brand_rank: parsed.recommendationRank,
+        prominence_tier: parsed.prominenceTier,
+        extracted_snippet: rawResult.metadata?.extractedSnippet || parsed.extractedSnippets?.[0] || '',
+      },
       citations_data: {
         citations: parsed.citations,
         target_brand: parsed.targetBrand,
@@ -226,8 +241,11 @@ export class MultiEngineTrackingWorker {
         extracted_snippets: parsed.extractedSnippets,
         latency_ms: rawResult.latencyMs,
         is_live: rawResult.isLive,
+        ai_overview_present: aiOverviewPresent,
+        is_cited: isCited,
       },
       raw_response: rawResult.rawText,
+      raw_response_text: rawResult.rawText,
       captured_at: new Date().toISOString(),
     };
 
@@ -247,6 +265,7 @@ export class MultiEngineTrackingWorker {
   private mapEngineToPlatform(engineId: EngineId): AIPlatform {
     const map: Record<EngineId, AIPlatform> = {
       gemini: 'gemini',
+      google_aio: 'google_aio',
       perplexity: 'perplexity',
       chatgpt: 'chatgpt',
       claude: 'claude',

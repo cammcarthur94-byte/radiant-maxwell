@@ -6,7 +6,7 @@ export type Json =
   | { [key: string]: Json | undefined }
   | Json[];
 
-export type AIPlatform = 'chatgpt' | 'perplexity' | 'gemini' | 'copilot' | 'claude' | 'meta';
+export type AIPlatform = 'chatgpt' | 'perplexity' | 'gemini' | 'copilot' | 'claude' | 'meta' | 'google_aio';
 export type MentionSentiment = 'positive' | 'neutral' | 'negative' | 'mixed';
 export type TenantRole = 'owner' | 'admin' | 'member' | 'viewer';
 
@@ -207,6 +207,9 @@ export type Database = {
           extracted_metrics: Json;
           raw_response_text: string | null;
           raw_ai_response: string | null;
+          ai_overview_present: boolean;
+          is_cited: boolean;
+          ai_overview_data: Json;
           captured_at: string;
           created_at: string;
         };
@@ -232,6 +235,9 @@ export type Database = {
           extracted_metrics?: Json;
           raw_response_text?: string | null;
           raw_ai_response?: string | null;
+          ai_overview_present?: boolean;
+          is_cited?: boolean;
+          ai_overview_data?: Json;
           captured_at?: string;
           created_at?: string;
         };
@@ -257,6 +263,9 @@ export type Database = {
           extracted_metrics?: Json;
           raw_response_text?: string | null;
           raw_ai_response?: string | null;
+          ai_overview_present?: boolean;
+          is_cited?: boolean;
+          ai_overview_data?: Json;
           captured_at?: string;
           created_at?: string;
         };

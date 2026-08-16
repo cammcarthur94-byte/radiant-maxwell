@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import {
   NavTabId,
   TenantInfo,
@@ -20,6 +20,7 @@ import {
   Globe2,
   TrendingUp,
 } from 'lucide-react';
+import { GoogleAIOverviewModal } from './GoogleAIOverviewModal';
 
 interface SecondaryViewsProps {
   activeTab: NavTabId;
@@ -36,6 +37,11 @@ export function SecondaryViews({
   selectedPlatform,
   onOpenUpgradeModal,
 }: SecondaryViewsProps) {
+  const [selectedAIOQuery, setSelectedAIOQuery] = useState<{
+    query: string;
+    rank: string;
+    engine: string;
+  } | null>(null);
   // Title map
   const viewMeta: Record<
     NavTabId,
@@ -244,7 +250,7 @@ export function SecondaryViews({
               {
                 query: 'Best enterprise visual website builder with custom React export',
                 rank: '#1 Recommendation',
-                engine: 'ChatGPT Search (GPT-4o)',
+                engine: 'Google AI Overview (SERP)',
                 sentiment: 'Highly Positive',
                 citationCount: 4,
               },
@@ -258,14 +264,21 @@ export function SecondaryViews({
               {
                 query: 'Enterprise CMS security and SOC2 compliance comparison 2026',
                 rank: '#1 Recommendation',
-                engine: 'Google Gemini 1.5 (AIO)',
+                engine: 'Google Gemini 1.5 (AIO Grounded)',
                 sentiment: 'Neutral / Fact-based',
                 citationCount: 6,
               },
             ].map((row, idx) => (
-              <div key={idx} className="py-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+              <div
+                key={idx}
+                onClick={() => setSelectedAIOQuery(row)}
+                className="py-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs hover:bg-slate-50/80 p-2 rounded-xl transition-all cursor-pointer group"
+              >
                 <div className="space-y-1">
-                  <div className="font-semibold text-slate-900">{row.query}</div>
+                  <div className="font-semibold text-slate-900 group-hover:text-indigo-600 transition-colors flex items-center gap-1.5">
+                    <span>{row.query}</span>
+                    <Sparkles className="w-3 h-3 text-cyan-600 opacity-0 group-hover:opacity-100 transition-opacity" />
+                  </div>
                   <div className="text-[11px] text-slate-400 flex items-center gap-2">
                     <Bot className="w-3 h-3 text-indigo-600" />
                     <span>{row.engine}</span>
@@ -285,6 +298,22 @@ export function SecondaryViews({
             ))}
           </div>
         </div>
+      )}
+
+      {/* Google AI Overview Modal */}
+      {selectedAIOQuery && (
+        <GoogleAIOverviewModal
+          isOpen={!!selectedAIOQuery}
+          onClose={() => setSelectedAIOQuery(null)}
+          query={selectedAIOQuery.query}
+          brandName={activeTenant.name}
+          brandDomain={activeTenant.domain}
+          brandRank={selectedAIOQuery.rank}
+          capturedAt="Just now"
+          aiOverviewPresent={true}
+          isCited={true}
+          serpProvider={selectedAIOQuery.engine}
+        />
       )}
     </div>
   );
