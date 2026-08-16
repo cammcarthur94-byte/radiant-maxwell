@@ -1,8 +1,5 @@
-'use client';
+import ModelComparisonPage from '../models/page';
 
-import React from 'react';
-import { ModelComparisonDashboard } from '@/components/dashboard/ModelComparisonDashboard';
-
-export default function ModelComparisonPage() {
-  return <ModelComparisonDashboard />;
+export default function CompetitorsAliasPage() {
+  return <ModelComparisonPage />;
 }
