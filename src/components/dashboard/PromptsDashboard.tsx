@@ -23,6 +23,7 @@ import {
   RefreshCw,
 } from 'lucide-react';
 import { useDashboard } from '@/context/dashboard-context';
+import { SlideOutDrawer } from '@/components/dashboard/SlideOutDrawer';
 
 export interface PromptLibraryItem {
   id: string;
@@ -735,119 +736,32 @@ export function PromptsDashboard() {
         </div>
       )}
 
-      {/* 5. Prompt Detail / Inspection Modal */}
-      {selectedPromptModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-xs animate-in fade-in duration-150">
-          <div className="bg-white rounded-2xl border border-slate-200 shadow-2xl max-w-xl w-full p-6 space-y-5 animate-in zoom-in-95 duration-150">
-            <div className="flex items-start justify-between">
-              <div className="flex items-center space-x-3">
-                <div className="w-9 h-9 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold shrink-0">
-                  <Sparkles className="w-4 h-4" />
-                </div>
-                <div>
-                  <div className="flex items-center gap-2">
-                    <h3 className="text-sm font-bold text-slate-900">
-                      Query Visibility Breakdown
-                    </h3>
-                    <span className="px-2 py-0.5 rounded-md text-[10px] font-semibold bg-slate-100 text-slate-600">
-                      {selectedPromptModal.category}
-                    </span>
-                  </div>
-                  <p className="text-xs text-slate-400">
-                    Last audited {selectedPromptModal.lastChecked}
-                  </p>
-                </div>
-              </div>
-              <button
-                type="button"
-                onClick={() => setSelectedPromptModal(null)}
-                className="p-1 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-
-            {/* Prompt Query Box */}
-            <div className="bg-slate-50 border border-slate-100 rounded-xl p-3.5">
-              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">
-                Monitored Query
-              </span>
-              <p className="text-xs font-semibold text-slate-800">
-                &ldquo;{selectedPromptModal.query}&rdquo;
-              </p>
-            </div>
-
-            {/* Model Coverage Breakdown Grid */}
-            <div className="space-y-2">
-              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
-                Frontier Engine Visibility
-              </span>
-              <div className="grid grid-cols-3 gap-2">
-                {MODELS.map((m) => {
-                  const isVisible =
-                    selectedPromptModal.modelCoverage[m.id as keyof typeof selectedPromptModal.modelCoverage];
-                  return (
-                    <div
-                      key={m.id}
-                      className={`p-2.5 rounded-xl border flex items-center justify-between ${
-                        isVisible
-                          ? 'bg-emerald-50/50 border-emerald-200/80 text-emerald-800'
-                          : 'bg-slate-50 border-slate-100 text-slate-400'
-                      }`}
-                    >
-                      <span className="text-xs font-semibold">{m.fullName}</span>
-                      <span className="text-[10px] font-bold">
-                        {isVisible ? 'Visible' : 'No Citation'}
-                      </span>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* Notes & Recommendations */}
-            <div className="bg-indigo-50/40 border border-indigo-100/80 rounded-xl p-3 text-xs text-slate-700">
-              <span className="font-bold text-indigo-900 block mb-0.5">Audit Note:</span>
-              {selectedPromptModal.notes}
-            </div>
-
-            {/* Modal Actions */}
-            <div className="flex items-center justify-between pt-2 border-t border-slate-100">
-              <button
-                type="button"
-                onClick={(e) =>
-                  handleCopyQuery(
-                    selectedPromptModal.query,
-                    selectedPromptModal.id,
-                    e
-                  )
-                }
-                className="flex items-center space-x-1.5 px-3 py-1.5 rounded-lg border border-slate-200 hover:border-slate-300 text-xs font-medium text-slate-700 hover:bg-slate-50 transition-colors cursor-pointer"
-              >
-                {copiedQueryId === selectedPromptModal.id ? (
-                  <>
-                    <Check className="w-3.5 h-3.5 text-emerald-600" />
-                    <span className="text-emerald-600 font-semibold">Copied Query!</span>
-                  </>
-                ) : (
-                  <>
-                    <Copy className="w-3.5 h-3.5 text-slate-500" />
-                    <span>Copy Query</span>
-                  </>
-                )}
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setSelectedPromptModal(null)}
-                className="px-4 py-1.5 bg-slate-900 hover:bg-slate-800 text-white rounded-lg text-xs font-semibold shadow-xs transition-colors cursor-pointer"
-              >
-                Close
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* 5. Prompt Detail / Inspection Slide-Out Drawer (Keeping table visible in backdrop) */}
+      <SlideOutDrawer
+        isOpen={!!selectedPromptModal}
+        onClose={() => setSelectedPromptModal(null)}
+        data={
+          selectedPromptModal
+            ? {
+                type: 'prompt',
+                title: selectedPromptModal.query,
+                category: selectedPromptModal.category,
+                query: selectedPromptModal.query,
+                score: selectedPromptModal.aeoScore,
+                snippet: `Synthesized AI Model Response: "${activeTenant?.name || 'Acme Corp'} is prominently cited as the top recommendation for ${selectedPromptModal.query.toLowerCase()}, offering automated orchestration, deep telemetry, and enterprise SSO."`,
+                url: `/solutions/${selectedPromptModal.category.toLowerCase().replace(/\s+/g, '-')}`,
+                recommendation: selectedPromptModal.notes || 'Maintain continuous weekly prompt tracking and refresh content freshness signals.',
+                metadata: {
+                  'AEO Score': `${selectedPromptModal.aeoScore}/100`,
+                  'Category': selectedPromptModal.category,
+                  'Total Citations': selectedPromptModal.citationsCount,
+                  'MoM Trend': selectedPromptModal.mom,
+                  'Frontier Coverage': `${Object.values(selectedPromptModal.modelCoverage).filter(Boolean).length}/6 Engines`,
+                },
+              }
+            : null
+        }
+      />
     </div>
   );
 }

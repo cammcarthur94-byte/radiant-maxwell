@@ -34,6 +34,7 @@ interface TopFilterBarProps {
   onTriggerTracking?: () => void;
   isTracking?: boolean;
   onExportCsv?: () => void;
+  onOpenCommandPalette?: () => void;
 }
 
 export function TopFilterBar({
@@ -53,6 +54,7 @@ export function TopFilterBar({
   onTriggerTracking,
   isTracking = false,
   onExportCsv,
+  onOpenCommandPalette,
 }: TopFilterBarProps) {
   const {
     triggerTracking,
@@ -177,8 +179,21 @@ export function TopFilterBar({
           </p>
         </div>
 
-        {/* Right Action Icons: Sync, Moon, Bell */}
+        {/* Right Action Icons: Search Cmd+K, Sync, Moon, Bell */}
         <div className="flex items-center space-x-3">
+          {/* Quick Search Cmd+K Button */}
+          <button
+            type="button"
+            onClick={onOpenCommandPalette}
+            className="hidden sm:flex items-center space-x-2 px-3 py-1.5 rounded-xl border border-slate-200/80 bg-slate-50 hover:bg-slate-100 text-xs text-slate-500 hover:text-slate-900 transition-colors shadow-2xs cursor-pointer"
+            title="Search command palette (Cmd+K)"
+          >
+            <span>Search...</span>
+            <kbd className="px-1.5 py-0.5 text-[10px] font-mono font-bold bg-white text-slate-500 rounded border border-slate-200 shadow-2xs">
+              ⌘K
+            </kbd>
+          </button>
+
           {/* Sync Button */}
           <button
             type="button"
