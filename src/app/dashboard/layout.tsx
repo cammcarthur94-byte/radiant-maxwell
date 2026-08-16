@@ -6,25 +6,11 @@ import { Sidebar } from '@/components/dashboard/Sidebar';
 import { TopFilterBar } from '@/components/dashboard/TopFilterBar';
 import { UpgradeModal } from '@/components/dashboard/UpgradeModal';
 import { NotificationDrawer } from '@/components/dashboard/NotificationDrawer';
-import { CommandPalette } from '@/components/dashboard/CommandPalette';
 import { AlertCircle, RefreshCw } from 'lucide-react';
 import { exportToCsv } from '@/lib/export-csv';
 
 function DashboardLayoutContent({ children }: { children: React.ReactNode }) {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-  const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
-
-  // Global Cmd+K / Ctrl+K Keyboard Listener
-  React.useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
-        e.preventDefault();
-        setCommandPaletteOpen((prev) => !prev);
-      }
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, []);
 
   const {
     activeTenant,
@@ -115,7 +101,6 @@ function DashboardLayoutContent({ children }: { children: React.ReactNode }) {
           onTriggerTracking={() => triggerTracking()}
           isTracking={isTracking}
           onExportCsv={handleExportDashboardCsv}
-          onOpenCommandPalette={() => setCommandPaletteOpen(true)}
         />
 
         {/* Page Content Body */}
@@ -150,12 +135,6 @@ function DashboardLayoutContent({ children }: { children: React.ReactNode }) {
       <NotificationDrawer
         isOpen={notificationDrawerOpen}
         onClose={() => setNotificationDrawerOpen(false)}
-      />
-
-      {/* Global Cmd+K Command Palette */}
-      <CommandPalette
-        isOpen={commandPaletteOpen}
-        onClose={() => setCommandPaletteOpen(false)}
       />
     </div>
   );

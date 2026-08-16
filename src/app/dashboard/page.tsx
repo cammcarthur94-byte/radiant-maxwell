@@ -18,7 +18,6 @@ import {
 } from 'lucide-react';
 import { useDashboard } from '@/context/dashboard-context';
 import { RadarChart } from '@/components/charts/RadarChart';
-import { ActionCenter, ActionItem } from '@/components/dashboard/ActionCenter';
 import { SlideOutDrawer, DrawerData } from '@/components/dashboard/SlideOutDrawer';
 import { VisibilityImpactChart } from '@/components/dashboard/VisibilityImpactChart';
 
@@ -50,26 +49,6 @@ export default function OverviewDashboardPage() {
       showToast('Synced benchmark data.');
     } finally {
       setIsSyncing(false);
-    }
-  };
-
-  // Action Center Card Selection
-  const handleSelectAction = (item: ActionItem) => {
-    if (item.drawerPayload) {
-      setDrawerData({
-        type: 'action',
-        title: item.drawerPayload.title,
-        category: item.drawerPayload.category,
-        recommendation: item.drawerPayload.recommendation,
-        snippet: item.drawerPayload.details,
-        codeSnippet: item.drawerPayload.codeSnippet,
-        metadata: {
-          'Impact Score': item.impactBadge,
-          'Issue Type': item.type.toUpperCase(),
-          Status: 'Needs Attention',
-        },
-      });
-      setDrawerOpen(true);
     }
   };
 
@@ -317,10 +296,7 @@ export default function OverviewDashboardPage() {
         </div>
       </div>
 
-      {/* 2. Strategic Action Center (Insights Banner) */}
-      <ActionCenter onSelectAction={handleSelectAction} />
-
-      {/* 3. Visual Charts Grid (Hidden in Compact View Mode) */}
+      {/* Visual Charts Grid (Hidden in Compact View Mode) */}
       {viewMode === 'visual' && (
         <>
           {/* Row A: Performance Radar & Gap to Top Performer */}
