@@ -355,8 +355,12 @@ export type Database = {
       prompts: {
         Row: {
           id: string;
-          prompt_key: string;
-          prompt_text: string;
+          tenant_id: string | null;
+          campaign_id: string | null;
+          query_text: string | null;
+          intent_category: 'AEO' | 'GEO' | 'AIO' | 'Brand' | 'Product' | 'Competitor';
+          prompt_key: string | null;
+          prompt_text: string | null;
           model_target: string;
           description: string | null;
           category: string;
@@ -366,8 +370,12 @@ export type Database = {
         };
         Insert: {
           id?: string;
-          prompt_key: string;
-          prompt_text: string;
+          tenant_id?: string | null;
+          campaign_id?: string | null;
+          query_text?: string | null;
+          intent_category?: 'AEO' | 'GEO' | 'AIO' | 'Brand' | 'Product' | 'Competitor';
+          prompt_key?: string | null;
+          prompt_text?: string | null;
           model_target?: string;
           description?: string | null;
           category?: string;
@@ -377,14 +385,111 @@ export type Database = {
         };
         Update: {
           id?: string;
-          prompt_key?: string;
-          prompt_text?: string;
+          tenant_id?: string | null;
+          campaign_id?: string | null;
+          query_text?: string | null;
+          intent_category?: 'AEO' | 'GEO' | 'AIO' | 'Brand' | 'Product' | 'Competitor';
+          prompt_key?: string | null;
+          prompt_text?: string | null;
           model_target?: string;
           description?: string | null;
           category?: string;
           is_active?: boolean;
           created_at?: string;
           updated_at?: string;
+        };
+        Relationships: [];
+      };
+      scores: {
+        Row: {
+          id: string;
+          tenant_id: string;
+          campaign_id: string | null;
+          calculation_date: string;
+          week_start_date: string;
+          overall_visibility_score: number;
+          aio_score: number;
+          aeo_score: number;
+          geo_score: number;
+          sentiment_subscore: number;
+          prominence_subscore: number;
+          sov_subscore: number;
+          citation_count: number;
+          brand_mentions_count: number;
+          pillar_breakdown: Json;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          tenant_id: string;
+          campaign_id?: string | null;
+          calculation_date?: string;
+          week_start_date?: string;
+          overall_visibility_score?: number;
+          aio_score?: number;
+          aeo_score?: number;
+          geo_score?: number;
+          sentiment_subscore?: number;
+          prominence_subscore?: number;
+          sov_subscore?: number;
+          citation_count?: number;
+          brand_mentions_count?: number;
+          pillar_breakdown?: Json;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          tenant_id?: string;
+          campaign_id?: string | null;
+          calculation_date?: string;
+          week_start_date?: string;
+          overall_visibility_score?: number;
+          aio_score?: number;
+          aeo_score?: number;
+          geo_score?: number;
+          sentiment_subscore?: number;
+          prominence_subscore?: number;
+          sov_subscore?: number;
+          citation_count?: number;
+          brand_mentions_count?: number;
+          pillar_breakdown?: Json;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
+      audit_logs: {
+        Row: {
+          id: string;
+          tenant_id: string | null;
+          user_id: string | null;
+          event_type: string;
+          status: 'success' | 'failed' | 'in_progress' | 'warning';
+          action: string;
+          details: Json;
+          ip_address: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          tenant_id?: string | null;
+          user_id?: string | null;
+          event_type: string;
+          status?: 'success' | 'failed' | 'in_progress' | 'warning';
+          action: string;
+          details?: Json;
+          ip_address?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          tenant_id?: string | null;
+          user_id?: string | null;
+          event_type?: string;
+          status?: 'success' | 'failed' | 'in_progress' | 'warning';
+          action?: string;
+          details?: Json;
+          ip_address?: string | null;
+          created_at?: string;
         };
         Relationships: [];
       };

@@ -42,6 +42,12 @@ export interface MonthlyScoreTrendPoint {
   aeo: number;
   geo: number;
   aio: number;
+  date?: string;
+  aeoScore?: number;
+  geoScore?: number;
+  aioScore?: number;
+  overallVisibility?: number;
+  citationCount?: number;
 }
 
 export interface ScoreInsight {

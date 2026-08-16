@@ -165,8 +165,8 @@ export class PromptService {
       if (!error && data) {
         const record: PromptTemplateRecord = {
           id: data.id,
-          prompt_key: data.prompt_key,
-          prompt_text: data.prompt_text,
+          prompt_key: data.prompt_key || promptKey,
+          prompt_text: data.prompt_text || data.query_text || '',
           model_target: data.model_target,
           description: data.description,
           category: data.category,
@@ -210,8 +210,8 @@ export class PromptService {
       if (!error && data && data.length > 0) {
         const list: PromptTemplateRecord[] = data.map((d) => ({
           id: d.id,
-          prompt_key: d.prompt_key,
-          prompt_text: d.prompt_text,
+          prompt_key: d.prompt_key || `prompt_${d.id.slice(0, 8)}`,
+          prompt_text: d.prompt_text || d.query_text || '',
           model_target: d.model_target,
           description: d.description,
           category: d.category,

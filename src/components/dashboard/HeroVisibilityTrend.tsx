@@ -81,10 +81,18 @@ export function HeroVisibilityTrend({
 
   // Build SVG Path strings using smooth bezier curves
   const generatePath = (key: 'aeo' | 'geo' | 'aio') => {
-    const points = monthsData.map((d, i) => ({
-      x: getXCoord(i),
-      y: getYCoord(d[key]),
-    }));
+    const points = monthsData.map((d: any, i) => {
+      const val =
+        key === 'aeo'
+          ? (d.aeo ?? d.aeoScore ?? 65)
+          : key === 'geo'
+          ? (d.geo ?? d.geoScore ?? 58)
+          : (d.aio ?? d.aioScore ?? 62);
+      return {
+        x: getXCoord(i),
+        y: getYCoord(Number(val)),
+      };
+    });
 
     if (points.length === 0) return '';
 

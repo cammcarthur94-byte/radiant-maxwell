@@ -356,15 +356,11 @@ async function handleTrackingRun(req: NextRequest) {
     // 6. Automated GEO Recommendation Trigger (if visibility score < 70% and not dryRun)
     let autoRecommendationsTriggered = false;
     if (!isDryRun && executionResults.length > 0) {
-      const avgScore =
-        executionResults.reduce((acc, curr) => acc + (curr.shareOfVoiceScore || 0), 0) /
-        executionResults.length;
-
+      const avgScore = executionResults.reduce((acc, curr) => acc + (curr.shareOfVoiceScore || 0), 0) / executionResults.length;
       const targetTenantId = tenantIdParam || activeCampaigns[0]?.tenant_id;
       if (targetTenantId && (avgScore < 70 || executionResults.some((r) => !r.brandMentioned))) {
         try {
           const geoService = new GeoRecommendationService(supabase);
-          // Run recommendation generation
           await geoService.generateRecommendations(targetTenantId, {
             visibilityScore: Math.round(avgScore),
           });
@@ -374,6 +370,61 @@ async function handleTrackingRun(req: NextRequest) {
         }
       }
     }
+
+    // 7. Record Score Snapshot & Audit Log in Supabase
+      if (!isDryRun && executionResults.length > 0) {
+        const targetTenantId = tenantIdParam || activeCampaigns[0]?.tenant_id;
+        if (targetTenantId) {
+          try {
+            const { ScoreStorageService } = await import('@/lib/services/score-storage-service');
+            const scoreStorage = new ScoreStorageService(supabase);
+            
+            const avgScore = executionResults.reduce((acc, curr) => acc + (curr.shareOfVoiceScore || 0), 0) / executionResults.length;
+            const mentionedCount = executionResults.filter((r) => r.brandMentioned).length;
+
+            const aeoScore = Math.min(100, Math.round(55 + (mentionedCount / executionResults.length) * 40));
+            const geoScore = Math.min(100, Math.round(avgScore * 0.9 + 20));
+            const aioScore = Math.min(100, Math.round((aeoScore * 0.5 + geoScore * 0.5)));
+            const overallVis = Math.round((aeoScore * 0.35 + geoScore * 0.35 + aioScore * 0.3));
+
+            await scoreStorage.recordScoreSnapshot({
+              tenantId: targetTenantId,
+              campaignId: activeCampaigns[0]?.id,
+              calculationDate: new Date().toISOString(),
+              weekStartDate: new Date().toISOString().split('T')[0],
+              overallVisibilityScore: overallVis,
+              aioScore: aioScore,
+              aeoScore: aeoScore,
+              geoScore: geoScore,
+              sentimentSubscore: Math.min(100, Math.round(75 + (mentionedCount * 3))),
+              prominenceSubscore: Math.min(100, Math.round(80 + (mentionedCount * 2))),
+              sovSubscore: Math.round(avgScore),
+              citationCount: executionResults.length,
+              brandMentionsCount: mentionedCount,
+              pillarBreakdown: {
+                engine: engineParam,
+                executionCount: executionResults.length,
+              },
+            });
+
+            await scoreStorage.logAuditEvent({
+              tenantId: targetTenantId,
+              eventType: 'score_recalculation',
+              status: 'success',
+              action: `Recalculated visibility scores via ${engineParam} (${executionResults.length} queries evaluated)`,
+              details: {
+                overallVisibility: overallVis,
+                aioScore,
+                aeoScore,
+                geoScore,
+                processedCount: executionResults.length,
+              },
+            });
+          } catch (storageErr) {
+            console.warn('Score snapshot storage error:', storageErr);
+          }
+        }
+      }
 
     return NextResponse.json({
       success: true,
