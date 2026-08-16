@@ -73,48 +73,72 @@ export function TopFilterBar({
     }
   };
 
-  // Dynamic Route Title & Subtitle Mapping matching screenshot
+  // Dynamic Route Title & Subtitle Mapping matching exact Figma prototype
   const getHeaderMeta = () => {
-    if (pathname === '/dashboard/geo' || pathname === '/dashboard/share-of-voice') {
+    if (pathname === '/dashboard' || pathname === '/dashboard/overview') {
       return {
-        title: 'GEO Score',
-        subtitle: 'Generative Engine Optimization - Content analysis',
+        title: 'Analysis and Benchmarks',
+        subtitle: 'Industry comparison and gap analysis',
       };
     }
-    if (pathname === '/dashboard/engines') {
+    if (pathname === '/dashboard/aeo' || pathname === '/dashboard/engines') {
       return {
         title: 'AEO Score',
-        subtitle: 'Answer Engine Optimization - Citation tracking & ordinal ranks',
+        subtitle: 'Answer Engine Optimization · Deep analysis',
       };
     }
-    if (pathname === '/dashboard/aio' || pathname === '/dashboard/overview') {
+    if (pathname === '/dashboard/geo') {
+      return {
+        title: 'GEO Score',
+        subtitle: 'Generative Engine Optimization · Content analysis',
+      };
+    }
+    if (pathname === '/dashboard/aio') {
       return {
         title: 'AIO Score',
         subtitle: 'AI Optimization · Knowledge & entity health',
       };
     }
-    if (pathname === '/dashboard/competitors') {
+    if (pathname === '/dashboard/models' || pathname === '/dashboard/competitors') {
       return {
         title: 'Model Comparison',
         subtitle: 'Side-by-side performance across all AI models',
       };
     }
-    if (pathname === '/dashboard/sources') {
+    if (pathname === '/dashboard/citations' || pathname === '/dashboard/citation-analysis') {
       return {
-        title: 'Citations & Sources',
-        subtitle: 'Domain attribution & reference discovery across AI engines',
+        title: 'Citation Analysis',
+        subtitle: 'Deep-dive citation breakdown and context',
       };
     }
     if (pathname === '/dashboard/prompts') {
       return {
-        title: 'Prompt Intelligence',
-        subtitle: 'Category prompt tracking & generative query evaluation',
+        title: 'Prompts',
+        subtitle: 'Tracked search queries & optimization',
+      };
+    }
+    if (pathname === '/dashboard/share-of-voice') {
+      return {
+        title: 'Share of Voice',
+        subtitle: 'Competitive conversational presence distribution',
+      };
+    }
+    if (pathname === '/dashboard/benchmarks') {
+      return {
+        title: 'Analysis and Benchmarks',
+        subtitle: 'Industry comparison and gap analysis',
+      };
+    }
+    if (pathname === '/dashboard/sources') {
+      return {
+        title: 'Top Domains',
+        subtitle: 'Authority citation sources & web links',
       };
     }
     if (pathname === '/dashboard/settings') {
       return {
-        title: 'Settings & Workspace',
-        subtitle: 'Manage active tenant, API keys, and workspace preferences',
+        title: 'Settings',
+        subtitle: 'Configuration and preferences',
       };
     }
     return {
