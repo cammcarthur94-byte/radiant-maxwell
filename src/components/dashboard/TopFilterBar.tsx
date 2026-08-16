@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import { usePathname } from 'next/navigation';
 import {
   RotateCw,
   Moon,
@@ -54,6 +55,7 @@ export function TopFilterBar({
   const { triggerTracking, refreshData } = useDashboard();
   const [isSyncing, setIsSyncing] = useState(false);
   const [isDarkMode, setIsDarkMode] = useState(false);
+  const pathname = usePathname();
 
   const handleSync = async () => {
     setIsSyncing(true);
@@ -71,16 +73,68 @@ export function TopFilterBar({
     }
   };
 
+  // Dynamic Route Title & Subtitle Mapping matching screenshot
+  const getHeaderMeta = () => {
+    if (pathname === '/dashboard/geo' || pathname === '/dashboard/share-of-voice') {
+      return {
+        title: 'GEO Score',
+        subtitle: 'Generative Engine Optimization - Content analysis',
+      };
+    }
+    if (pathname === '/dashboard/engines') {
+      return {
+        title: 'AEO Score',
+        subtitle: 'Answer Engine Optimization - Citation tracking & ordinal ranks',
+      };
+    }
+    if (pathname === '/dashboard/aio' || pathname === '/dashboard/overview') {
+      return {
+        title: 'AIO Score',
+        subtitle: 'AI Optimization · Knowledge & entity health',
+      };
+    }
+    if (pathname === '/dashboard/competitors') {
+      return {
+        title: 'Model Comparison',
+        subtitle: 'Side-by-side performance across all AI models',
+      };
+    }
+    if (pathname === '/dashboard/sources') {
+      return {
+        title: 'Citations & Sources',
+        subtitle: 'Domain attribution & reference discovery across AI engines',
+      };
+    }
+    if (pathname === '/dashboard/prompts') {
+      return {
+        title: 'Prompt Intelligence',
+        subtitle: 'Category prompt tracking & generative query evaluation',
+      };
+    }
+    if (pathname === '/dashboard/settings') {
+      return {
+        title: 'Settings & Workspace',
+        subtitle: 'Manage active tenant, API keys, and workspace preferences',
+      };
+    }
+    return {
+      title: 'AI Visibility Dashboard',
+      subtitle: 'Tracking 6 models · Last synced 14 min ago',
+    };
+  };
+
+  const { title, subtitle } = getHeaderMeta();
+
   return (
-    <header className="bg-white border-b border-slate-100/80 px-8 py-5 select-none space-y-4">
+    <header className="bg-white border-b border-slate-100/80 px-8 py-5 select-none">
       {/* Top Header Row */}
       <div className="flex items-center justify-between gap-4">
         <div>
           <h1 className="text-xl font-bold text-slate-900 tracking-tight">
-            AI Visibility Dashboard
+            {title}
           </h1>
           <p className="text-xs text-slate-400 mt-0.5 font-normal">
-            Tracking 6 models · Last synced 14 min ago
+            {subtitle}
           </p>
         </div>
 
@@ -120,19 +174,6 @@ export function TopFilterBar({
               <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-indigo-600 ring-2 ring-white" />
             )}
           </button>
-        </div>
-      </div>
-
-      {/* Reporting Period Sub-Bar */}
-      <div className="flex items-center justify-between text-xs text-slate-500 pt-0.5">
-        <div className="flex items-center space-x-2 font-medium">
-          <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0" />
-          <span className="text-slate-700 font-semibold">
-            Reporting period: <span className="text-slate-500 font-normal">March – August 2025</span>
-          </span>
-        </div>
-        <div className="text-slate-400 font-medium font-sans">
-          Aug 15, 2025
         </div>
       </div>
     </header>

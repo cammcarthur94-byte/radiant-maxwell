@@ -71,12 +71,12 @@ export function Sidebar({
           icon: Search,
         },
         {
-          href: '/dashboard/share-of-voice',
+          href: '/dashboard/geo',
           label: 'GEO Score',
           icon: Globe2,
         },
         {
-          href: '/dashboard/overview',
+          href: '/dashboard/aio',
           label: 'AIO Score',
           icon: Sparkles,
         },
@@ -236,12 +236,13 @@ export function Sidebar({
               {section.items.map((item, itemIdx) => {
                 const IconComponent = item.icon;
                 
-                // Determine active state for Overview
-                const isOverviewActive =
-                  (item.href === '/dashboard' || item.href === '/dashboard/overview') &&
-                  (pathname === '/dashboard' || pathname === '/dashboard/overview');
-
-                const isActive = isOverviewActive || (item.href !== '/dashboard' && pathname === item.href);
+                // Determine active state cleanly
+                const isActive =
+                  item.href === '/dashboard'
+                    ? pathname === '/dashboard'
+                    : item.href === '/dashboard/aio'
+                    ? pathname === '/dashboard/aio' || pathname === '/dashboard/overview'
+                    : pathname === item.href;
 
                 return (
                   <Link
