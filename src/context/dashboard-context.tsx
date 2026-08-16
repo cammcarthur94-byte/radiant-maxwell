@@ -92,6 +92,16 @@ export interface DashboardContextType {
   comparePreviousPeriod: boolean;
   setComparePreviousPeriod: (enabled: boolean) => void;
 
+  // Cross-Filtering State
+  selectedModel: string | null;
+  setSelectedModel: (model: string | null) => void;
+  toggleSelectedModel: (model: string) => void;
+  selectedCompetitor: string | null;
+  setSelectedCompetitor: (competitor: string | null) => void;
+  toggleSelectedCompetitor: (competitor: string) => void;
+  clearFilters: () => void;
+  isFilterActive: boolean;
+
   theme: 'light' | 'dark';
   setTheme: (theme: 'light' | 'dark') => void;
   toggleTheme: () => void;
@@ -141,6 +151,36 @@ export function DashboardProvider({ children }: { children: React.ReactNode }) {
   const [notificationDrawerOpen, setNotificationDrawerOpen] = useState(false);
   const [hasUnreadNotifications, setHasUnreadNotifications] = useState(false);
   const [onboardingModalOpen, setOnboardingModalOpen] = useState(false);
+
+  // Global Cross-Filtering State
+  const [selectedModel, setSelectedModelState] = useState<string | null>(null);
+  const [selectedCompetitor, setSelectedCompetitorState] = useState<string | null>(null);
+
+  const setSelectedModel = useCallback((model: string | null) => {
+    setSelectedModelState(model);
+  }, []);
+
+  const toggleSelectedModel = useCallback((model: string) => {
+    setSelectedModelState((prev) => (prev?.toLowerCase() === model.toLowerCase() ? null : model));
+  }, []);
+
+  const setSelectedCompetitor = useCallback((competitor: string | null) => {
+    setSelectedCompetitorState(competitor);
+  }, []);
+
+  const toggleSelectedCompetitor = useCallback((competitor: string) => {
+    setSelectedCompetitorState((prev) => (prev?.toLowerCase() === competitor.toLowerCase() ? null : competitor));
+  }, []);
+
+  const clearFilters = useCallback(() => {
+    setSelectedModelState(null);
+    setSelectedCompetitorState(null);
+  }, []);
+
+  const isFilterActive = useMemo(() => {
+    return Boolean(selectedModel || selectedCompetitor);
+  }, [selectedModel, selectedCompetitor]);
+
 
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isTracking, setIsTracking] = useState<boolean>(false);
@@ -656,6 +696,14 @@ export function DashboardProvider({ children }: { children: React.ReactNode }) {
         setComparePreviousPeriod,
         comparisonPeriod,
         setComparisonPeriod,
+        selectedModel,
+        setSelectedModel,
+        toggleSelectedModel,
+        selectedCompetitor,
+        setSelectedCompetitor,
+        toggleSelectedCompetitor,
+        clearFilters,
+        isFilterActive,
         theme,
         setTheme,
         toggleTheme,

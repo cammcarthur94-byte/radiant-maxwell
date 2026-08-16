@@ -193,7 +193,15 @@ const INITIAL_CITATIONS: CitationItem[] = [
 ];
 
 export function CitationsDashboard() {
-  const { activeTenant } = useDashboard();
+  const {
+    activeTenant,
+    selectedModel,
+    toggleSelectedModel,
+    selectedCompetitor,
+    toggleSelectedCompetitor,
+    isFilterActive,
+    clearFilters,
+  } = useDashboard();
   const [selectedTimeframe, setSelectedTimeframe] = useState<'7d' | '30d' | '90d' | 'all'>('7d');
   const [timeframeDropdownOpen, setTimeframeDropdownOpen] = useState(false);
   const [selectedModelFilter, setSelectedModelFilter] = useState<string>('all');
@@ -202,7 +210,34 @@ export function CitationsDashboard() {
   const [copiedUrlId, setCopiedUrlId] = useState<string | null>(null);
   const [hoveredMonthIndex, setHoveredMonthIndex] = useState<number | null>(null);
 
-  // Filter citations based on search and selected model
+  // Model matching helper
+  const isCitationModelSelected = (modelName: string) => {
+    if (!selectedModel) return true;
+    const target = selectedModel.toLowerCase();
+    const cur = modelName.toLowerCase();
+    if (target === cur) return true;
+    if (target === 'gpt' && cur.includes('chatgpt')) return true;
+    if (target === 'gem' && cur.includes('gemini')) return true;
+    if (target === 'cld' && cur.includes('claude')) return true;
+    if (target === 'ppx' && cur.includes('perplexity')) return true;
+    if (target === 'grk' && cur.includes('grok')) return true;
+    if (target === 'mta' && (cur.includes('meta') || cur.includes('llama'))) return true;
+    return false;
+  };
+
+  // Competitor matching helper
+  const isCitationCompetitorSelected = (item: CitationItem) => {
+    if (!selectedCompetitor) return true;
+    const target = selectedCompetitor.toLowerCase();
+    return (
+      item.query.toLowerCase().includes(target) ||
+      item.snippet.toLowerCase().includes(target) ||
+      item.pageReferenced.toLowerCase().includes(target) ||
+      (target.includes('acme') && item.domain.includes('acme'))
+    );
+  };
+
+  // Filter citations based on search, selected model filter and global filter
   const filteredCitations = useMemo(() => {
     return INITIAL_CITATIONS.filter((item) => {
       const matchesSearch =
@@ -210,10 +245,10 @@ export function CitationsDashboard() {
         item.pageReferenced.toLowerCase().includes(searchQuery.toLowerCase()) ||
         item.model.toLowerCase().includes(searchQuery.toLowerCase());
       
-      const matchesModel =
+      const matchesLocalModel =
         selectedModelFilter === 'all' || item.model.toLowerCase() === selectedModelFilter.toLowerCase();
 
-      return matchesSearch && matchesModel;
+      return matchesSearch && matchesLocalModel;
     });
   }, [searchQuery, selectedModelFilter]);
 
@@ -409,26 +444,28 @@ export function CitationsDashboard() {
               Monthly brand mentions across AI platforms
             </p>
           </div>
-
           {/* Model Legend */}
           <div className="flex flex-wrap items-center gap-4 sm:gap-5 text-xs text-slate-600">
-            {MODEL_CONFIGS.map((item) => (
-              <button
-                key={item.id}
-                type="button"
-                onClick={() =>
-                  setSelectedModelFilter(selectedModelFilter === item.name.toLowerCase() ? 'all' : item.name.toLowerCase())
-                }
-                className={`flex items-center space-x-1.5 transition-all cursor-pointer ${
-                  selectedModelFilter !== 'all' && selectedModelFilter !== item.name.toLowerCase()
-                    ? 'opacity-35 line-through'
-                    : 'opacity-100 font-medium'
-                }`}
-              >
-                <span className={`w-2 h-2 rounded-full ${item.dotBg}`} />
-                <span className="text-slate-700">{item.name}</span>
-              </button>
-            ))}
+            {MODEL_CONFIGS.map((item) => {
+              const isSelected = isCitationModelSelected(item.name);
+              return (
+                <button
+                  key={item.id}
+                  type="button"
+                  onClick={() => toggleSelectedModel(item.name)}
+                  className={`flex items-center space-x-1.5 transition-all duration-300 cursor-pointer ${
+                    !isSelected
+                      ? 'opacity-30'
+                      : selectedModel && isSelected
+                      ? 'opacity-100 font-bold scale-105'
+                      : 'opacity-100 font-medium'
+                  }`}
+                >
+                  <span className={`w-2 h-2 rounded-full ${item.dotBg}`} />
+                  <span className="text-slate-700">{item.name}</span>
+                </button>
+              );
+            })}
           </div>
         </div>
 
@@ -448,18 +485,18 @@ export function CitationsDashboard() {
 
           {/* Responsive SVG Graphic */}
           <svg
-            className="w-full h-[calc(100%-28px)] pl-7 overflow-visible"
+            className="w-full h-[calc(100%-28px)] overflow-visible pl-7"
             viewBox="0 0 1000 240"
             preserveAspectRatio="none"
           >
             <defs>
               <linearGradient id="chatgpt-grad" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="#10b981" stopOpacity="0.16" />
+                <stop offset="0%" stopColor="#10b981" stopOpacity="0.22" />
                 <stop offset="100%" stopColor="#10b981" stopOpacity="0.04" />
               </linearGradient>
               <linearGradient id="gemini-grad" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="#3b82f6" stopOpacity="0.16" />
-                <stop offset="100%" stopColor="#3b82f6" stopOpacity="0.04" />
+                <stop offset="0%" stopColor="#3b82f6" stopOpacity="0.18" />
+                <stop offset="100%" stopColor="#3b82f6" stopOpacity="0.03" />
               </linearGradient>
               <linearGradient id="claude-grad" x1="0" y1="0" x2="0" y2="1">
                 <stop offset="0%" stopColor="#f97316" stopOpacity="0.14" />
@@ -476,77 +513,113 @@ export function CitationsDashboard() {
             </defs>
 
             {/* Layer 1 (Bottom): Meta AI Base Solid Layer */}
-            <path
-              d={generateAreaPath('yMeta', 'yZero')}
-              fill="#475569"
-              opacity="0.88"
-            />
-            <path
-              d={generateLinePath('yMeta')}
-              fill="none"
-              stroke="#334155"
-              strokeWidth="1.5"
-            />
+            <g
+              className="cursor-pointer transition-opacity duration-300"
+              style={{ opacity: isCitationModelSelected('Meta AI') ? 1.0 : 0.2 }}
+              onClick={() => toggleSelectedModel('Meta AI')}
+            >
+              <path
+                d={generateAreaPath('yMeta', 'yZero')}
+                fill="#475569"
+                opacity="0.88"
+              />
+              <path
+                d={generateLinePath('yMeta')}
+                fill="none"
+                stroke="#334155"
+                strokeWidth="1.5"
+              />
+            </g>
 
             {/* Layer 2: Grok Area */}
-            <path
-              d={generateAreaPath('yGrok', 'yMeta')}
-              fill="url(#grok-grad)"
-            />
-            <path
-              d={generateLinePath('yGrok')}
-              fill="none"
-              stroke="#0ea5e9"
-              strokeWidth="1.8"
-            />
+            <g
+              className="cursor-pointer transition-opacity duration-300"
+              style={{ opacity: isCitationModelSelected('Grok') ? 1.0 : 0.2 }}
+              onClick={() => toggleSelectedModel('Grok')}
+            >
+              <path
+                d={generateAreaPath('yGrok', 'yMeta')}
+                fill="url(#grok-grad)"
+              />
+              <path
+                d={generateLinePath('yGrok')}
+                fill="none"
+                stroke="#0ea5e9"
+                strokeWidth="1.8"
+              />
+            </g>
 
             {/* Layer 3: Perplexity Area */}
-            <path
-              d={generateAreaPath('yPerp', 'yGrok')}
-              fill="url(#perp-grad)"
-            />
-            <path
-              d={generateLinePath('yPerp')}
-              fill="none"
-              stroke="#8b5cf6"
-              strokeWidth="1.8"
-            />
+            <g
+              className="cursor-pointer transition-opacity duration-300"
+              style={{ opacity: isCitationModelSelected('Perplexity') ? 1.0 : 0.2 }}
+              onClick={() => toggleSelectedModel('Perplexity')}
+            >
+              <path
+                d={generateAreaPath('yPerp', 'yGrok')}
+                fill="url(#perp-grad)"
+              />
+              <path
+                d={generateLinePath('yPerp')}
+                fill="none"
+                stroke="#8b5cf6"
+                strokeWidth="1.8"
+              />
+            </g>
 
             {/* Layer 4: Claude Area */}
-            <path
-              d={generateAreaPath('yClaude', 'yPerp')}
-              fill="url(#claude-grad)"
-            />
-            <path
-              d={generateLinePath('yClaude')}
-              fill="none"
-              stroke="#f97316"
-              strokeWidth="1.8"
-            />
+            <g
+              className="cursor-pointer transition-opacity duration-300"
+              style={{ opacity: isCitationModelSelected('Claude') ? 1.0 : 0.2 }}
+              onClick={() => toggleSelectedModel('Claude')}
+            >
+              <path
+                d={generateAreaPath('yClaude', 'yPerp')}
+                fill="url(#claude-grad)"
+              />
+              <path
+                d={generateLinePath('yClaude')}
+                fill="none"
+                stroke="#f97316"
+                strokeWidth="1.8"
+              />
+            </g>
 
             {/* Layer 5: Gemini Area */}
-            <path
-              d={generateAreaPath('yGemini', 'yClaude')}
-              fill="url(#gemini-grad)"
-            />
-            <path
-              d={generateLinePath('yGemini')}
-              fill="none"
-              stroke="#3b82f6"
-              strokeWidth="2"
-            />
+            <g
+              className="cursor-pointer transition-opacity duration-300"
+              style={{ opacity: isCitationModelSelected('Gemini') ? 1.0 : 0.2 }}
+              onClick={() => toggleSelectedModel('Gemini')}
+            >
+              <path
+                d={generateAreaPath('yGemini', 'yClaude')}
+                fill="url(#gemini-grad)"
+              />
+              <path
+                d={generateLinePath('yGemini')}
+                fill="none"
+                stroke="#3b82f6"
+                strokeWidth="2"
+              />
+            </g>
 
             {/* Layer 6 (Top): ChatGPT Area */}
-            <path
-              d={generateAreaPath('yChatgpt', 'yGemini')}
-              fill="url(#chatgpt-grad)"
-            />
-            <path
-              d={generateLinePath('yChatgpt')}
-              fill="none"
-              stroke="#10b981"
-              strokeWidth="2.2"
-            />
+            <g
+              className="cursor-pointer transition-opacity duration-300"
+              style={{ opacity: isCitationModelSelected('ChatGPT') ? 1.0 : 0.2 }}
+              onClick={() => toggleSelectedModel('ChatGPT')}
+            >
+              <path
+                d={generateAreaPath('yChatgpt', 'yGemini')}
+                fill="url(#chatgpt-grad)"
+              />
+              <path
+                d={generateLinePath('yChatgpt')}
+                fill="none"
+                stroke="#10b981"
+                strokeWidth="2.2"
+              />
+            </g>
 
             {/* Hover guideline and active dots */}
             {hoveredMonthIndex !== null && chartPoints[hoveredMonthIndex] && (
@@ -781,29 +854,43 @@ export function CitationsDashboard() {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-50 text-slate-700">
-              {filteredCitations.map((item) => (
-                <tr
-                  key={item.id}
-                  onClick={() => setSelectedCitationModal(item)}
-                  className="hover:bg-slate-50/70 transition-colors cursor-pointer group"
-                >
-                  {/* QUERY */}
-                  <td className="py-3.5 px-3">
-                    <span className="font-semibold text-slate-800 group-hover:text-indigo-600 transition-colors">
-                      {item.query}
-                    </span>
-                  </td>
+              {filteredCitations.map((item) => {
+                const isRowActive = isCitationModelSelected(item.model) && isCitationCompetitorSelected(item);
 
-                  {/* MODEL */}
-                  <td className="py-3.5 px-3 whitespace-nowrap">
-                    <div className="flex items-center space-x-2">
-                      <span
-                        className="w-2 h-2 rounded-full shrink-0"
-                        style={{ backgroundColor: item.modelColor }}
-                      />
-                      <span className="font-medium text-slate-800">{item.model}</span>
-                    </div>
-                  </td>
+                return (
+                  <tr
+                    key={item.id}
+                    onClick={() => setSelectedCitationModal(item)}
+                    className={`transition-all duration-300 cursor-pointer group ${
+                      isRowActive ? 'opacity-100 hover:bg-slate-50/70' : 'opacity-30 hover:opacity-90'
+                    }`}
+                  >
+                    {/* QUERY */}
+                    <td className="py-3.5 px-3">
+                      <span className="font-semibold text-slate-800 group-hover:text-indigo-600 transition-colors">
+                        {item.query}
+                      </span>
+                    </td>
+
+                    {/* MODEL */}
+                    <td className="py-3.5 px-3 whitespace-nowrap">
+                      <div
+                        className="flex items-center space-x-2 p-1 -m-1 rounded-md hover:bg-slate-100/70 transition-colors"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          toggleSelectedModel(item.model);
+                        }}
+                        title={`Filter by ${item.model}`}
+                      >
+                        <span
+                          className="w-2 h-2 rounded-full shrink-0"
+                          style={{ backgroundColor: item.modelColor }}
+                        />
+                        <span className="font-medium text-slate-800 hover:text-indigo-600">
+                          {item.model}
+                        </span>
+                      </div>
+                    </td>
 
                   {/* TYPE */}
                   <td className="py-3.5 px-3 whitespace-nowrap">
@@ -825,8 +912,9 @@ export function CitationsDashboard() {
                     {item.date}
                   </td>
                 </tr>
-              ))}
-            </tbody>
+              );
+            })}
+          </tbody>
           </table>
         </div>
       </div>

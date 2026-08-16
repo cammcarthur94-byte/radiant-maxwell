@@ -43,9 +43,19 @@ export function CompetitiveLeaderboard({
   activeTenant,
   isLoading = false,
 }: CompetitiveLeaderboardProps) {
-  const { activeTenant: contextTenant, scoreSummary } = useDashboard();
+  const {
+    activeTenant: contextTenant,
+    scoreSummary,
+    selectedCompetitor,
+    toggleSelectedCompetitor,
+  } = useDashboard();
   const currentTenant = activeTenant || contextTenant;
   const [activeTab, setActiveTab] = useState<MetricTab>('AEO');
+
+  const isCompetitorMatch = (name: string) => {
+    if (!selectedCompetitor) return true;
+    return selectedCompetitor.toLowerCase() === name.toLowerCase();
+  };
 
   if (isLoading) {
     return <CompetitiveLeaderboardSkeleton />;
@@ -225,11 +235,17 @@ export function CompetitiveLeaderboard({
           const currentScore = item.scores[activeTab];
           const currentDelta = item.deltas[activeTab];
           const isPositive = !currentDelta.startsWith('-');
+          const isSelected = isCompetitorMatch(item.name);
 
           return (
             <div
               key={item.rank}
-              className="py-3.5 flex items-center justify-between gap-4 group hover:bg-slate-50/50 rounded-xl px-1 transition-colors"
+              onClick={() => toggleSelectedCompetitor(item.name)}
+              className={`py-3.5 flex items-center justify-between gap-4 group rounded-xl px-2 transition-all duration-300 cursor-pointer ${
+                isSelected
+                  ? 'opacity-100 bg-slate-50/70'
+                  : 'opacity-30 hover:opacity-80 hover:bg-slate-50/40'
+              }`}
             >
               {/* Rank & Brand Name */}
               <div className="flex items-center space-x-3 w-48 sm:w-56 shrink-0">

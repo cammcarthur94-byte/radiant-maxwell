@@ -52,10 +52,32 @@ export interface MonthlyTrendData {
 }
 
 export function ShareOfVoiceDashboard() {
-  const { activeTenant } = useDashboard();
+  const {
+    activeTenant,
+    selectedModel,
+    toggleSelectedModel,
+    selectedCompetitor,
+    toggleSelectedCompetitor,
+    isFilterActive,
+    clearFilters,
+  } = useDashboard();
   const [hoveredSlice, setHoveredSlice] = useState<string | null>(null);
   const [hoveredMonthIdx, setHoveredMonthIdx] = useState<number | null>(null);
   const [hoveredModelIdx, setHoveredModelIdx] = useState<number | null>(null);
+
+  // Competitor matching helper
+  const isCompetitorSelected = (id: string, name: string) => {
+    if (!selectedCompetitor) return true;
+    const target = selectedCompetitor.toLowerCase();
+    return target === id.toLowerCase() || target === name.toLowerCase();
+  };
+
+  // Model matching helper
+  const isModelSelected = (code: string, name?: string) => {
+    if (!selectedModel) return true;
+    const target = selectedModel.toLowerCase();
+    return target === code.toLowerCase() || (name && target === name.toLowerCase());
+  };
 
   // Competitor list matching screenshot data
   const competitors: CompetitorData[] = [
@@ -404,13 +426,20 @@ export function ShareOfVoiceDashboard() {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-stretch">
         {/* Left Card: Overall Share (col-span-5) */}
         <div className="lg:col-span-5 bg-white border border-slate-100/90 rounded-2xl p-6 shadow-2xs flex flex-col justify-between">
-          <div>
-            <h2 className="text-base font-bold text-slate-900 tracking-tight">
-              Overall Share
-            </h2>
-            <p className="text-xs text-slate-400 font-normal mt-0.5">
-              Brand mentions — August 2025
-            </p>
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-base font-bold text-slate-900 tracking-tight">
+                Overall Share
+              </h2>
+              <p className="text-xs text-slate-400 font-normal mt-0.5">
+                Brand mentions — August 2025
+              </p>
+            </div>
+            {selectedCompetitor && (
+              <span className="text-[11px] font-semibold text-indigo-600 bg-indigo-50 border border-indigo-100/80 px-2 py-0.5 rounded-md">
+                Filtered: {selectedCompetitor}
+              </span>
+            )}
           </div>
 
           {/* Donut Chart Visual */}
@@ -421,6 +450,9 @@ export function ShareOfVoiceDashboard() {
             >
               {donutSlices.map((slice) => {
                 const isHovered = hoveredSlice === slice.id;
+                const isSelected = isCompetitorSelected(slice.id, slice.name);
+                const opacity = isSelected ? 1.0 : 0.2;
+
                 return (
                   <path
                     key={slice.id}
@@ -429,12 +461,15 @@ export function ShareOfVoiceDashboard() {
                     stroke="#ffffff"
                     strokeWidth="3.5"
                     strokeLinejoin="round"
-                    className="cursor-pointer transition-all duration-200"
+                    fillOpacity={opacity}
+                    strokeOpacity={opacity}
+                    className="cursor-pointer transition-all duration-300 ease-out"
                     style={{
                       transformOrigin: `${cx}px ${cy}px`,
-                      transform: isHovered ? 'scale(1.04)' : 'scale(1)',
+                      transform: isHovered ? 'scale(1.04)' : isSelected && selectedCompetitor ? 'scale(1.02)' : 'scale(1)',
                       filter: isHovered ? 'brightness(1.1)' : 'none',
                     }}
+                    onClick={() => toggleSelectedCompetitor(slice.name)}
                     onMouseEnter={() => setHoveredSlice(slice.id)}
                     onMouseLeave={() => setHoveredSlice(null)}
                   />
@@ -443,7 +478,7 @@ export function ShareOfVoiceDashboard() {
             </svg>
 
             {/* Hover Tooltip in Center of Donut */}
-            {hoveredSlice && (
+            {hoveredSlice ? (
               <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none text-center">
                 <span className="text-xs font-semibold text-slate-500">
                   {competitors.find((c) => c.id === hoveredSlice)?.name}
@@ -452,7 +487,16 @@ export function ShareOfVoiceDashboard() {
                   {competitors.find((c) => c.id === hoveredSlice)?.share}%
                 </span>
               </div>
-            )}
+            ) : selectedCompetitor ? (
+              <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none text-center">
+                <span className="text-xs font-semibold text-indigo-600">
+                  {selectedCompetitor}
+                </span>
+                <span className="text-2xl font-extrabold text-slate-900">
+                  {competitors.find((c) => isCompetitorSelected(c.id, c.name))?.share || '26'}%
+                </span>
+              </div>
+            ) : null}
           </div>
 
           {/* 2-Column Legend */}
@@ -460,9 +504,10 @@ export function ShareOfVoiceDashboard() {
             {/* Column 1 */}
             <div className="space-y-2.5">
               <div
-                className={`flex items-center justify-between transition-opacity cursor-pointer ${
-                  hoveredSlice && hoveredSlice !== 'acme' ? 'opacity-40' : 'opacity-100'
+                className={`flex items-center justify-between transition-opacity duration-300 cursor-pointer ${
+                  !isCompetitorSelected('acme', competitors[0].name) ? 'opacity-30 hover:opacity-80' : 'opacity-100'
                 }`}
+                onClick={() => toggleSelectedCompetitor(competitors[0].name)}
                 onMouseEnter={() => setHoveredSlice('acme')}
                 onMouseLeave={() => setHoveredSlice(null)}
               >
@@ -474,9 +519,10 @@ export function ShareOfVoiceDashboard() {
               </div>
 
               <div
-                className={`flex items-center justify-between transition-opacity cursor-pointer ${
-                  hoveredSlice && hoveredSlice !== 'pinnacle' ? 'opacity-40' : 'opacity-100'
+                className={`flex items-center justify-between transition-opacity duration-300 cursor-pointer ${
+                  !isCompetitorSelected('pinnacle', 'Pinnacle AI') ? 'opacity-30 hover:opacity-80' : 'opacity-100'
                 }`}
+                onClick={() => toggleSelectedCompetitor('Pinnacle AI')}
                 onMouseEnter={() => setHoveredSlice('pinnacle')}
                 onMouseLeave={() => setHoveredSlice(null)}
               >
@@ -488,9 +534,10 @@ export function ShareOfVoiceDashboard() {
               </div>
 
               <div
-                className={`flex items-center justify-between transition-opacity cursor-pointer ${
-                  hoveredSlice && hoveredSlice !== 'coresync' ? 'opacity-40' : 'opacity-100'
+                className={`flex items-center justify-between transition-opacity duration-300 cursor-pointer ${
+                  !isCompetitorSelected('coresync', 'CoreSync') ? 'opacity-30 hover:opacity-80' : 'opacity-100'
                 }`}
+                onClick={() => toggleSelectedCompetitor('CoreSync')}
                 onMouseEnter={() => setHoveredSlice('coresync')}
                 onMouseLeave={() => setHoveredSlice(null)}
               >
@@ -505,9 +552,10 @@ export function ShareOfVoiceDashboard() {
             {/* Column 2 */}
             <div className="space-y-2.5">
               <div
-                className={`flex items-center justify-between transition-opacity cursor-pointer ${
-                  hoveredSlice && hoveredSlice !== 'vertex' ? 'opacity-40' : 'opacity-100'
+                className={`flex items-center justify-between transition-opacity duration-300 cursor-pointer ${
+                  !isCompetitorSelected('vertex', 'Vertex Solutions') ? 'opacity-30 hover:opacity-80' : 'opacity-100'
                 }`}
+                onClick={() => toggleSelectedCompetitor('Vertex Solutions')}
                 onMouseEnter={() => setHoveredSlice('vertex')}
                 onMouseLeave={() => setHoveredSlice(null)}
               >
@@ -519,9 +567,10 @@ export function ShareOfVoiceDashboard() {
               </div>
 
               <div
-                className={`flex items-center justify-between transition-opacity cursor-pointer ${
-                  hoveredSlice && hoveredSlice !== 'nexus' ? 'opacity-40' : 'opacity-100'
+                className={`flex items-center justify-between transition-opacity duration-300 cursor-pointer ${
+                  !isCompetitorSelected('nexus', 'Nexus Digital') ? 'opacity-30 hover:opacity-80' : 'opacity-100'
                 }`}
+                onClick={() => toggleSelectedCompetitor('Nexus Digital')}
                 onMouseEnter={() => setHoveredSlice('nexus')}
                 onMouseLeave={() => setHoveredSlice(null)}
               >
@@ -533,9 +582,10 @@ export function ShareOfVoiceDashboard() {
               </div>
 
               <div
-                className={`flex items-center justify-between transition-opacity cursor-pointer ${
-                  hoveredSlice && hoveredSlice !== 'others' ? 'opacity-40' : 'opacity-100'
+                className={`flex items-center justify-between transition-opacity duration-300 cursor-pointer ${
+                  !isCompetitorSelected('others', 'Others') ? 'opacity-30 hover:opacity-80' : 'opacity-100'
                 }`}
+                onClick={() => toggleSelectedCompetitor('Others')}
                 onMouseEnter={() => setHoveredSlice('others')}
                 onMouseLeave={() => setHoveredSlice(null)}
               >
@@ -551,13 +601,20 @@ export function ShareOfVoiceDashboard() {
 
         {/* Right Card: Share of Voice Trend (col-span-7) */}
         <div className="lg:col-span-7 bg-white border border-slate-100/90 rounded-2xl p-6 shadow-2xs flex flex-col justify-between">
-          <div>
-            <h2 className="text-base font-bold text-slate-900 tracking-tight">
-              Share of Voice Trend
-            </h2>
-            <p className="text-xs text-slate-400 font-normal mt-0.5">
-              Monthly share evolution — all competitors
-            </p>
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-base font-bold text-slate-900 tracking-tight">
+                Share of Voice Trend
+              </h2>
+              <p className="text-xs text-slate-400 font-normal mt-0.5">
+                Monthly share evolution — all competitors
+              </p>
+            </div>
+            {selectedCompetitor && (
+              <span className="text-[11px] font-semibold text-purple-600 bg-purple-50 border border-purple-100/80 px-2 py-0.5 rounded-md">
+                Tracking: {selectedCompetitor}
+              </span>
+            )}
           </div>
 
           {/* 100% Stacked Area Chart */}
@@ -621,28 +678,64 @@ export function ShareOfVoiceDashboard() {
                   <line x1="0" y1="180" x2="600" y2="180" stroke="#f1f5f9" strokeDasharray="3 3" />
 
                   {/* Layer 6: Others (Top band) */}
-                  <path d={buildAreaPath('y6', 'y5')} fill="url(#sovOthersGrad)" />
-                  <path d={buildStrokePath('y6')} fill="none" stroke="#475569" strokeWidth="2.5" />
+                  <g
+                    className="cursor-pointer transition-opacity duration-300"
+                    style={{ opacity: isCompetitorSelected('others', 'Others') ? 1.0 : 0.2 }}
+                    onClick={() => toggleSelectedCompetitor('Others')}
+                  >
+                    <path d={buildAreaPath('y6', 'y5')} fill="url(#sovOthersGrad)" />
+                    <path d={buildStrokePath('y6')} fill="none" stroke="#475569" strokeWidth="2.5" />
+                  </g>
 
                   {/* Layer 5: CoreSync (Mint Green) */}
-                  <path d={buildAreaPath('y5', 'y4')} fill="url(#sovCoreSyncGrad)" />
-                  <path d={buildStrokePath('y5')} fill="none" stroke="#34d399" strokeWidth="1.2" />
+                  <g
+                    className="cursor-pointer transition-opacity duration-300"
+                    style={{ opacity: isCompetitorSelected('coresync', 'CoreSync') ? 1.0 : 0.2 }}
+                    onClick={() => toggleSelectedCompetitor('CoreSync')}
+                  >
+                    <path d={buildAreaPath('y5', 'y4')} fill="url(#sovCoreSyncGrad)" />
+                    <path d={buildStrokePath('y5')} fill="none" stroke="#34d399" strokeWidth="1.2" />
+                  </g>
 
                   {/* Layer 4: Nexus Digital (Orange/Peach) */}
-                  <path d={buildAreaPath('y4', 'y3')} fill="url(#sovNexusGrad)" />
-                  <path d={buildStrokePath('y4')} fill="none" stroke="#fb923c" strokeWidth="1.2" />
+                  <g
+                    className="cursor-pointer transition-opacity duration-300"
+                    style={{ opacity: isCompetitorSelected('nexus', 'Nexus Digital') ? 1.0 : 0.2 }}
+                    onClick={() => toggleSelectedCompetitor('Nexus Digital')}
+                  >
+                    <path d={buildAreaPath('y4', 'y3')} fill="url(#sovNexusGrad)" />
+                    <path d={buildStrokePath('y4')} fill="none" stroke="#fb923c" strokeWidth="1.2" />
+                  </g>
 
                   {/* Layer 3: Pinnacle AI (Lavender) */}
-                  <path d={buildAreaPath('y3', 'y2')} fill="url(#sovPinnacleGrad)" />
-                  <path d={buildStrokePath('y3')} fill="none" stroke="#c084fc" strokeWidth="1.2" />
+                  <g
+                    className="cursor-pointer transition-opacity duration-300"
+                    style={{ opacity: isCompetitorSelected('pinnacle', 'Pinnacle AI') ? 1.0 : 0.2 }}
+                    onClick={() => toggleSelectedCompetitor('Pinnacle AI')}
+                  >
+                    <path d={buildAreaPath('y3', 'y2')} fill="url(#sovPinnacleGrad)" />
+                    <path d={buildStrokePath('y3')} fill="none" stroke="#c084fc" strokeWidth="1.2" />
+                  </g>
 
                   {/* Layer 2: Vertex Solutions (Cyan) */}
-                  <path d={buildAreaPath('y2', 'y1')} fill="url(#sovVertexGrad)" />
-                  <path d={buildStrokePath('y2')} fill="none" stroke="#38bdf8" strokeWidth="1.2" />
+                  <g
+                    className="cursor-pointer transition-opacity duration-300"
+                    style={{ opacity: isCompetitorSelected('vertex', 'Vertex Solutions') ? 1.0 : 0.2 }}
+                    onClick={() => toggleSelectedCompetitor('Vertex Solutions')}
+                  >
+                    <path d={buildAreaPath('y2', 'y1')} fill="url(#sovVertexGrad)" />
+                    <path d={buildStrokePath('y2')} fill="none" stroke="#38bdf8" strokeWidth="1.2" />
+                  </g>
 
                   {/* Layer 1: Acme Corp (Indigo/Purple base) */}
-                  <path d={buildAreaPath('y1', 'y0')} fill="url(#sovAcmeGrad)" />
-                  <path d={buildStrokePath('y1')} fill="none" stroke="#818cf8" strokeWidth="1.5" />
+                  <g
+                    className="cursor-pointer transition-opacity duration-300"
+                    style={{ opacity: isCompetitorSelected('acme', competitors[0].name) ? 1.0 : 0.2 }}
+                    onClick={() => toggleSelectedCompetitor(competitors[0].name)}
+                  >
+                    <path d={buildAreaPath('y1', 'y0')} fill="url(#sovAcmeGrad)" />
+                    <path d={buildStrokePath('y1')} fill="none" stroke="#818cf8" strokeWidth="1.5" />
+                  </g>
 
                   {/* Vertical Hover Guide Line */}
                   {hoveredMonthIdx !== null && (
@@ -742,13 +835,20 @@ export function ShareOfVoiceDashboard() {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-stretch">
         {/* Left Card: Share by Model (col-span-6) */}
         <div className="lg:col-span-6 bg-white border border-slate-100/90 rounded-2xl p-6 shadow-2xs flex flex-col justify-between">
-          <div>
-            <h2 className="text-base font-bold text-slate-900 tracking-tight">
-              Share by Model
-            </h2>
-            <p className="text-xs text-slate-400 font-normal mt-0.5">
-              Brand mention distribution per AI platform
-            </p>
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-base font-bold text-slate-900 tracking-tight">
+                Share by Model
+              </h2>
+              <p className="text-xs text-slate-400 font-normal mt-0.5">
+                Brand mention distribution per AI platform
+              </p>
+            </div>
+            {selectedModel && (
+              <span className="text-[11px] font-semibold text-indigo-600 bg-indigo-50 border border-indigo-100/80 px-2 py-0.5 rounded-md">
+                Model: {selectedModel}
+              </span>
+            )}
           </div>
 
           {/* 100% Stacked Bar Chart */}
@@ -800,16 +900,18 @@ export function ShareOfVoiceDashboard() {
                     const yCoreSync = yNexus - hCoreSync;
                     const yOthers = 20;
 
-                    const isHovered = hoveredModelIdx === idx;
+                    const isModelMatch = isModelSelected(m.modelCode, m.modelName);
+                    const barOpacity = isModelMatch ? 1.0 : 0.2;
 
                     return (
                       <g
                         key={m.modelCode}
-                        className="cursor-pointer transition-all duration-150"
+                        className="cursor-pointer transition-all duration-300"
                         onMouseEnter={() => setHoveredModelIdx(idx)}
                         onMouseLeave={() => setHoveredModelIdx(null)}
+                        onClick={() => toggleSelectedModel(m.modelCode)}
                         style={{
-                          opacity: hoveredModelIdx !== null && !isHovered ? 0.6 : 1,
+                          opacity: barOpacity,
                         }}
                       >
                         {/* Segment 1: Acme Corp (Bottom) */}
@@ -819,7 +921,12 @@ export function ShareOfVoiceDashboard() {
                           width={barWidth}
                           height={hAcme}
                           fill="#6366f1"
-                          rx="0"
+                          fillOpacity={isCompetitorSelected('acme', competitors[0].name) ? 1.0 : 0.2}
+                          className="transition-all duration-300"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            toggleSelectedCompetitor(competitors[0].name);
+                          }}
                         />
 
                         {/* Segment 2: Vertex Solutions */}
@@ -829,6 +936,12 @@ export function ShareOfVoiceDashboard() {
                           width={barWidth}
                           height={hVertex}
                           fill="#06b6d4"
+                          fillOpacity={isCompetitorSelected('vertex', 'Vertex Solutions') ? 1.0 : 0.2}
+                          className="transition-all duration-300"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            toggleSelectedCompetitor('Vertex Solutions');
+                          }}
                         />
 
                         {/* Segment 3: Pinnacle AI */}
@@ -838,6 +951,12 @@ export function ShareOfVoiceDashboard() {
                           width={barWidth}
                           height={hPinnacle}
                           fill="#a855f7"
+                          fillOpacity={isCompetitorSelected('pinnacle', 'Pinnacle AI') ? 1.0 : 0.2}
+                          className="transition-all duration-300"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            toggleSelectedCompetitor('Pinnacle AI');
+                          }}
                         />
 
                         {/* Segment 4: Nexus Digital */}
@@ -847,6 +966,12 @@ export function ShareOfVoiceDashboard() {
                           width={barWidth}
                           height={hNexus}
                           fill="#f97316"
+                          fillOpacity={isCompetitorSelected('nexus', 'Nexus Digital') ? 1.0 : 0.2}
+                          className="transition-all duration-300"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            toggleSelectedCompetitor('Nexus Digital');
+                          }}
                         />
 
                         {/* Segment 5: CoreSync */}
@@ -856,6 +981,12 @@ export function ShareOfVoiceDashboard() {
                           width={barWidth}
                           height={hCoreSync}
                           fill="#10b981"
+                          fillOpacity={isCompetitorSelected('coresync', 'CoreSync') ? 1.0 : 0.2}
+                          className="transition-all duration-300"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            toggleSelectedCompetitor('CoreSync');
+                          }}
                         />
 
                         {/* Segment 6: Others (Top) */}
@@ -865,7 +996,13 @@ export function ShareOfVoiceDashboard() {
                           width={barWidth}
                           height={hOthers}
                           fill="#475569"
+                          fillOpacity={isCompetitorSelected('others', 'Others') ? 1.0 : 0.2}
+                          className="transition-all duration-300"
                           rx="2"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            toggleSelectedCompetitor('Others');
+                          }}
                         />
 
                         {/* Subtle divider strokes between segments */}
@@ -881,19 +1018,27 @@ export function ShareOfVoiceDashboard() {
 
                 {/* X-Axis Model Labels */}
                 <div className="flex items-center justify-between text-[11px] font-mono font-bold text-slate-400 pt-1.5 px-4 select-none">
-                  {modelShares.map((m, idx) => (
-                    <button
-                      key={m.modelCode}
-                      type="button"
-                      onMouseEnter={() => setHoveredModelIdx(idx)}
-                      onMouseLeave={() => setHoveredModelIdx(null)}
-                      className={`hover:text-slate-900 transition-colors cursor-pointer ${
-                        hoveredModelIdx === idx ? 'text-indigo-600 font-extrabold' : ''
-                      }`}
-                    >
-                      {m.modelCode}
-                    </button>
-                  ))}
+                  {modelShares.map((m, idx) => {
+                    const isSelected = isModelSelected(m.modelCode, m.modelName);
+                    return (
+                      <button
+                        key={m.modelCode}
+                        type="button"
+                        onClick={() => toggleSelectedModel(m.modelCode)}
+                        onMouseEnter={() => setHoveredModelIdx(idx)}
+                        onMouseLeave={() => setHoveredModelIdx(null)}
+                        className={`transition-all duration-300 cursor-pointer ${
+                          selectedModel && isSelected
+                            ? 'text-indigo-600 font-extrabold scale-110'
+                            : !isSelected
+                            ? 'text-slate-300'
+                            : 'hover:text-slate-900'
+                        }`}
+                      >
+                        {m.modelCode}
+                      </button>
+                    );
+                  })}
                 </div>
 
                 {/* Hover Tooltip for Selected Model */}
@@ -944,72 +1089,88 @@ export function ShareOfVoiceDashboard() {
 
         {/* Right Card: Competitor Breakdown (col-span-6) */}
         <div className="lg:col-span-6 bg-white border border-slate-100/90 rounded-2xl p-6 shadow-2xs flex flex-col justify-between">
-          <div>
-            <h2 className="text-base font-bold text-slate-900 tracking-tight">
-              Competitor Breakdown
-            </h2>
-            <p className="text-xs text-slate-400 font-normal mt-0.5">
-              Share rankings with monthly change
-            </p>
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-base font-bold text-slate-900 tracking-tight">
+                Competitor Breakdown
+              </h2>
+              <p className="text-xs text-slate-400 font-normal mt-0.5">
+                Share rankings with monthly change
+              </p>
+            </div>
+            {selectedCompetitor && (
+              <span className="text-[11px] font-semibold text-indigo-600 bg-indigo-50 border border-indigo-100/80 px-2 py-0.5 rounded-md">
+                Active: {selectedCompetitor}
+              </span>
+            )}
           </div>
 
           {/* Ranked Competitors List */}
           <div className="divide-y divide-slate-100 my-auto">
-            {competitors.map((comp, idx) => (
-              <div
-                key={comp.id}
-                className="py-3 first:pt-2 last:pb-1 flex items-center justify-between gap-3 group"
-              >
-                {/* Left: Rank & Brand Info */}
-                <div className="flex items-center space-x-3 w-48 shrink-0">
-                  <span className="text-xs font-mono font-medium text-slate-400 w-4">
-                    {idx + 1}
-                  </span>
-                  <div className="flex items-center space-x-2 truncate">
-                    <span className="text-xs font-bold text-slate-900 truncate">
-                      {comp.name}
+            {competitors.map((comp, idx) => {
+              const isSelected = isCompetitorSelected(comp.id, comp.name);
+              return (
+                <div
+                  key={comp.id}
+                  onClick={() => toggleSelectedCompetitor(comp.name)}
+                  className={`py-3 first:pt-2 last:pb-1 flex items-center justify-between gap-3 group cursor-pointer transition-all duration-300 rounded-lg px-2 hover:bg-slate-50/80 ${
+                    isSelected
+                      ? 'opacity-100'
+                      : 'opacity-30 hover:opacity-80'
+                  }`}
+                >
+                  {/* Left: Rank & Brand Info */}
+                  <div className="flex items-center space-x-3 w-48 shrink-0">
+                    <span className="text-xs font-mono font-medium text-slate-400 w-4">
+                      {idx + 1}
                     </span>
-                    {comp.isCurrentBrand && (
-                      <span className="px-1.5 py-0.5 rounded bg-indigo-50 text-[10px] font-bold text-indigo-700 border border-indigo-100/80 uppercase">
-                        YOU
+                    <div className="flex items-center space-x-2 truncate">
+                      <span className="text-xs font-bold text-slate-900 truncate group-hover:text-indigo-600 transition-colors">
+                        {comp.name}
                       </span>
-                    )}
+                      {comp.isCurrentBrand && (
+                        <span className="px-1.5 py-0.5 rounded bg-indigo-50 text-[10px] font-bold text-indigo-700 border border-indigo-100/80 uppercase">
+                          YOU
+                        </span>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Middle: Progress Bar */}
+                  <div className="flex-1 mx-2">
+                    <div className="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden">
+                      <div
+                        className="h-full rounded-full transition-all duration-500"
+                        style={{
+                          width: `${(comp.share / 26) * 100}%`,
+                          backgroundColor: comp.color,
+                        }}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Right: Percentage & Delta Pill */}
+                  <div className="flex items-center space-x-3 w-24 justify-end shrink-0">
+                    <span className="text-xs font-bold text-slate-900 font-mono">
+                      {comp.share}%
+                    </span>
+                    <span
+                      className={`inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-md text-[10px] font-bold font-mono ${
+                        comp.isPositive
+                          ? 'bg-emerald-50 text-emerald-600'
+                          : 'bg-rose-50 text-rose-500'
+                      }`}
+                    >
+                      {comp.isPositive ? '↗' : '↘'} {comp.isPositive ? `+${comp.delta}%` : `${comp.delta}%`}
+                    </span>
                   </div>
                 </div>
-
-                {/* Middle: Progress Bar */}
-                <div className="flex-1 mx-2">
-                  <div className="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden">
-                    <div
-                      className="h-full rounded-full transition-all duration-500"
-                      style={{
-                        width: `${(comp.share / 26) * 100}%`,
-                        backgroundColor: comp.color,
-                      }}
-                    />
-                  </div>
-                </div>
-
-                {/* Right: Percentage & Delta Pill */}
-                <div className="flex items-center space-x-3 w-24 justify-end shrink-0">
-                  <span className="text-xs font-bold text-slate-900 font-mono">
-                    {comp.share}%
-                  </span>
-                  <span
-                    className={`inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-md text-[10px] font-bold font-mono ${
-                      comp.isPositive
-                        ? 'bg-emerald-50 text-emerald-600'
-                        : 'bg-rose-50 text-rose-500'
-                    }`}
-                  >
-                    {comp.isPositive ? '↗' : '↘'} {comp.isPositive ? `+${comp.delta}%` : `${comp.delta}%`}
-                  </span>
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       </div>
     </div>
   );
 }
+

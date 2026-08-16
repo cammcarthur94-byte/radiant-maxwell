@@ -6,6 +6,8 @@ import {
   RotateCw,
   Moon,
   Bell,
+  Filter,
+  X,
 } from 'lucide-react';
 import {
   DateRangeOption,
@@ -52,7 +54,16 @@ export function TopFilterBar({
   isTracking = false,
   onExportCsv,
 }: TopFilterBarProps) {
-  const { triggerTracking, refreshData } = useDashboard();
+  const {
+    triggerTracking,
+    refreshData,
+    selectedModel,
+    setSelectedModel,
+    selectedCompetitor,
+    setSelectedCompetitor,
+    clearFilters,
+    isFilterActive,
+  } = useDashboard();
   const [isSyncing, setIsSyncing] = useState(false);
   const [isDarkMode, setIsDarkMode] = useState(false);
   const pathname = usePathname();
@@ -77,8 +88,8 @@ export function TopFilterBar({
   const getHeaderMeta = () => {
     if (pathname === '/dashboard' || pathname === '/dashboard/overview') {
       return {
-        title: 'Analysis and Benchmarks',
-        subtitle: 'Industry comparison and gap analysis',
+        title: 'AI Visibility Dashboard',
+        subtitle: 'Tracking 6 models · Last synced 14 min ago',
       };
     }
     if (pathname === '/dashboard/aeo' || pathname === '/dashboard/engines') {
@@ -99,10 +110,14 @@ export function TopFilterBar({
         subtitle: 'AI Optimization · Knowledge & entity health',
       };
     }
-    if (pathname === '/dashboard/models' || pathname === '/dashboard/competitors') {
+    if (
+      pathname === '/dashboard/models' ||
+      pathname === '/dashboard/benchmarks' ||
+      pathname === '/dashboard/competitors'
+    ) {
       return {
-        title: 'Model Comparison',
-        subtitle: 'Side-by-side performance across all AI models',
+        title: 'Analysis and Benchmarks',
+        subtitle: 'Industry comparison and gap analysis',
       };
     }
     if (pathname === '/dashboard/citations' || pathname === '/dashboard/citation-analysis') {
@@ -200,6 +215,56 @@ export function TopFilterBar({
           </button>
         </div>
       </div>
+
+      {/* Active Cross-Filter Banner */}
+      {isFilterActive && (
+        <div className="mt-3.5 pt-3 border-t border-slate-100 flex flex-wrap items-center justify-between gap-2.5 animate-in fade-in slide-in-from-top-1 duration-200">
+          <div className="flex items-center flex-wrap gap-2">
+            <div className="flex items-center gap-1.5 text-xs font-semibold text-slate-500 mr-1">
+              <Filter className="w-3.5 h-3.5 text-indigo-600" />
+              <span>Active Filters:</span>
+            </div>
+
+            {selectedModel && (
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium bg-indigo-50 text-indigo-700 border border-indigo-200/70 shadow-2xs">
+                <span>Model: <strong className="font-semibold">{selectedModel}</strong></span>
+                <button
+                  type="button"
+                  onClick={() => setSelectedModel(null)}
+                  className="p-0.5 hover:bg-indigo-200/60 rounded-md text-indigo-600 hover:text-indigo-900 transition-colors cursor-pointer"
+                  title="Remove model filter"
+                >
+                  <X className="w-3 h-3" />
+                </button>
+              </span>
+            )}
+
+            {selectedCompetitor && (
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium bg-purple-50 text-purple-700 border border-purple-200/70 shadow-2xs">
+                <span>Competitor: <strong className="font-semibold">{selectedCompetitor}</strong></span>
+                <button
+                  type="button"
+                  onClick={() => setSelectedCompetitor(null)}
+                  className="p-0.5 hover:bg-purple-200/60 rounded-md text-purple-600 hover:text-purple-900 transition-colors cursor-pointer"
+                  title="Remove competitor filter"
+                >
+                  <X className="w-3 h-3" />
+                </button>
+              </span>
+            )}
+          </div>
+
+          <button
+            type="button"
+            onClick={clearFilters}
+            className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold text-rose-600 hover:text-rose-700 bg-rose-50 hover:bg-rose-100 border border-rose-200/70 transition-all shadow-2xs cursor-pointer"
+          >
+            <X className="w-3.5 h-3.5" />
+            <span>Clear Filters</span>
+          </button>
+        </div>
+      )}
     </header>
   );
 }
+

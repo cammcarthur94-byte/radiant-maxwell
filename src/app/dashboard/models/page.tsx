@@ -1,5 +1,5 @@
-import OverviewDashboardPage from '../page';
+import { ModelComparisonDashboard } from '@/components/dashboard/ModelComparisonDashboard';
 
 export default function ModelComparisonPage() {
-  return <OverviewDashboardPage />;
+  return <ModelComparisonDashboard />;
 }

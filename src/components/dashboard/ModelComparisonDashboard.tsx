@@ -2,273 +2,380 @@
 
 import React, { useState } from 'react';
 import {
-  Sparkles,
   TrendingUp,
-  ExternalLink,
+  TrendingDown,
   ChevronDown,
-  ChevronUp,
   Download,
-  RefreshCw,
-  Info,
-  CheckCircle2,
 } from 'lucide-react';
 import { useDashboard } from '@/context/dashboard-context';
 
-export interface ModelMetricData {
-  id: string;
+export interface CompetitorBenchmark {
+  rank: number;
   name: string;
-  shortName: string;
-  color: string;
-  dotBg: string;
-  fillColor: string;
-  strokeColor: string;
+  isTargetBrand?: boolean;
   aeo: number;
   geo: number;
   aio: number;
-  avgScore: number;
-  citations: number;
-  momTrend: number;
-  description: string;
+  overall: number;
+  vsIndustry: number; // percentage vs industry avg
 }
 
-export const DEFAULT_MODELS: ModelMetricData[] = [
+export const BENCHMARK_COMPETITORS: CompetitorBenchmark[] = [
   {
-    id: 'chatgpt',
-    name: 'ChatGPT',
-    shortName: 'ChatGPT',
-    color: '#10b981',
-    dotBg: 'bg-[#10b981]',
-    fillColor: 'rgba(16, 185, 129, 0.15)',
-    strokeColor: '#10b981',
-    aeo: 78,
+    rank: 1,
+    name: 'Vertex Solutions',
+    aeo: 82,
+    geo: 71,
+    aio: 75,
+    overall: 76,
+    vsIndustry: 17,
+  },
+  {
+    rank: 2,
+    name: 'Pinnacle AI',
+    aeo: 77,
     geo: 65,
-    aio: 71,
-    avgScore: 71,
-    citations: 1204,
-    momTrend: 3.1,
-    description: 'OpenAI GPT-4o conversational engine and search citations.',
+    aio: 80,
+    overall: 74,
+    vsIndustry: 15,
   },
   {
-    id: 'gemini',
-    name: 'Gemini',
-    shortName: 'Gemini',
-    color: '#3b82f6',
-    dotBg: 'bg-[#3b82f6]',
-    fillColor: 'rgba(59, 130, 246, 0.18)',
-    strokeColor: '#3b82f6',
-    aeo: 69,
-    geo: 70,
-    aio: 64,
-    avgScore: 68,
-    citations: 876,
-    momTrend: 7.2,
-    description: 'Google Gemini 1.5 Pro & Search AI Overviews integration.',
-  },
-  {
-    id: 'claude',
-    name: 'Claude',
-    shortName: 'Claude',
-    color: '#f97316',
-    dotBg: 'bg-[#f97316]',
-    fillColor: 'rgba(249, 115, 22, 0.15)',
-    strokeColor: '#f97316',
-    aeo: 72,
-    geo: 68,
-    aio: 64,
-    avgScore: 68,
-    citations: 652,
-    momTrend: 5.4,
-    description: 'Anthropic Claude 3.5 Sonnet generative reasoning synthesis.',
-  },
-  {
-    id: 'perplexity',
-    name: 'Perplexity',
-    shortName: 'Perplex',
-    color: '#8b5cf6',
-    dotBg: 'bg-[#8b5cf6]',
-    fillColor: 'rgba(139, 92, 246, 0.18)',
-    strokeColor: '#8b5cf6',
-    aeo: 70,
+    rank: 3,
+    name: 'Acme Corp',
+    isTargetBrand: true,
+    aeo: 78,
     geo: 62,
-    aio: 66,
-    avgScore: 66,
-    citations: 940,
-    momTrend: 12.8,
-    description: 'Perplexity Pro Sonar online citation indexing and grounding.',
+    aio: 70,
+    overall: 70,
+    vsIndustry: 12,
   },
   {
-    id: 'grok',
-    name: 'Grok',
-    shortName: 'Grok',
-    color: '#06b6d4',
-    dotBg: 'bg-[#06b6d4]',
-    fillColor: 'rgba(6, 182, 212, 0.15)',
-    strokeColor: '#06b6d4',
-    aeo: 61,
+    rank: 4,
+    name: 'Nexus AI',
+    aeo: 72,
+    geo: 60,
+    aio: 68,
+    overall: 67,
+    vsIndustry: 8,
+  },
+  {
+    rank: 5,
+    name: 'Pulse Engine',
+    aeo: 65,
     geo: 58,
-    aio: 58,
-    avgScore: 59,
-    citations: 324,
-    momTrend: 1.8,
-    description: 'xAI Grok 2 live social and real-time knowledge discovery.',
+    aio: 64,
+    overall: 62,
+    vsIndustry: 2,
   },
   {
-    id: 'meta',
-    name: 'Meta AI',
-    shortName: 'Meta AI',
-    color: '#2563eb',
-    dotBg: 'bg-[#2563eb]',
-    fillColor: 'rgba(37, 99, 235, 0.15)',
-    strokeColor: '#2563eb',
-    aeo: 58,
-    geo: 54,
-    aio: 56,
-    avgScore: 56,
-    citations: 418,
-    momTrend: 0.5,
-    description: 'Meta Llama 3 assistant answers and web search synthesis.',
+    rank: 6,
+    name: 'Horizon Tech',
+    aeo: 59,
+    geo: 52,
+    aio: 58,
+    overall: 56,
+    vsIndustry: -4,
+  },
+  {
+    rank: 7,
+    name: 'OmniCore',
+    aeo: 52,
+    geo: 48,
+    aio: 50,
+    overall: 50,
+    vsIndustry: -10,
+  },
+];
+
+export interface GapItem {
+  id: string;
+  label: string;
+  gap: number;
+  color: string;
+  barBg: string;
+  topScore: number;
+  yourScore: number;
+}
+
+export const GAP_ITEMS: GapItem[] = [
+  {
+    id: 'aeo',
+    label: 'AEO',
+    gap: 11,
+    color: '#f97316',
+    barBg: 'bg-[#fb923c]',
+    topScore: 82,
+    yourScore: 71,
+  },
+  {
+    id: 'geo',
+    label: 'GEO',
+    gap: 21,
+    color: '#f43f5e',
+    barBg: 'bg-[#f43f5e]',
+    topScore: 71,
+    yourScore: 50,
+  },
+  {
+    id: 'aio',
+    label: 'AIO',
+    gap: 17,
+    color: '#f97316',
+    barBg: 'bg-[#fb923c]',
+    topScore: 80,
+    yourScore: 63,
+  },
+  {
+    id: 'prompts',
+    label: 'Prompts',
+    gap: 16,
+    color: '#f97316',
+    barBg: 'bg-[#fb923c]',
+    topScore: 88,
+    yourScore: 72,
+  },
+  {
+    id: 'structured',
+    label: 'Structured',
+    gap: 11,
+    color: '#22c55e',
+    barBg: 'bg-[#34d399]',
+    topScore: 79,
+    yourScore: 68,
+  },
+  {
+    id: 'freshness',
+    label: 'Freshness',
+    gap: 21,
+    color: '#f43f5e',
+    barBg: 'bg-[#f43f5e]',
+    topScore: 85,
+    yourScore: 64,
   },
 ];
 
 export function ModelComparisonDashboard() {
-  const { activeTenant, triggerTracking, isTracking } = useDashboard();
-  const [selectedModelId, setSelectedModelId] = useState<string | null>(null);
-  const [hoveredModelId, setHoveredModelId] = useState<string | null>(null);
-  const [sortField, setSortField] = useState<keyof ModelMetricData>('avgScore');
-  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
+  const {
+    activeTenant,
+    selectedCompetitor,
+    toggleSelectedCompetitor,
+    isFilterActive,
+  } = useDashboard();
 
-  const models = [...DEFAULT_MODELS].sort((a, b) => {
+  const [hoveredGap, setHoveredGap] = useState<GapItem | null>(null);
+  const [hoveredRadarAxis, setHoveredRadarAxis] = useState<string | null>(null);
+  const [sortField, setSortField] = useState<keyof CompetitorBenchmark>('rank');
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
+
+  // Sort competitors
+  const sortedCompetitors = [...BENCHMARK_COMPETITORS].sort((a, b) => {
     const valA = a[sortField];
     const valB = b[sortField];
     if (typeof valA === 'number' && typeof valB === 'number') {
-      return sortDirection === 'desc' ? valB - valA : valA - valB;
+      return sortDirection === 'asc' ? valA - valB : valB - valA;
     }
     return 0;
   });
 
-  const handleSort = (field: keyof ModelMetricData) => {
+  const handleSort = (field: keyof CompetitorBenchmark) => {
     if (sortField === field) {
-      setSortDirection(sortDirection === 'desc' ? 'asc' : 'desc');
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
     } else {
       setSortField(field);
-      setSortDirection('desc');
+      setSortDirection('asc');
     }
   };
 
-  const handleExportCSV = () => {
-    const headers = ['Model', 'AEO Score', 'GEO Score', 'AIO Score', 'Avg Score', 'Citations', 'MoM Trend (%)'];
-    const rows = DEFAULT_MODELS.map((m) => [
-      m.name,
-      m.aeo,
-      m.geo,
-      m.aio,
-      m.avgScore,
-      m.citations,
-      `+${m.momTrend}%`,
-    ]);
-    const csvContent = 'data:text/csv;charset=utf-8,' + [headers.join(','), ...rows.map((r) => r.join(','))].join('\n');
-    const encodedUri = encodeURI(csvContent);
-    const link = document.createElement('a');
-    link.setAttribute('href', encodedUri);
-    link.setAttribute('download', `model_comparison_${activeTenant?.slug || 'acme'}.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+  const isCompetitorMatch = (name: string) => {
+    if (!selectedCompetitor) return true;
+    return selectedCompetitor.toLowerCase() === name.toLowerCase();
   };
 
-  // Radar geometry calculations (Equilateral triangle)
-  const radarCx = 160;
-  const radarCy = 145;
-  const radarR = 90;
+  // Radar chart geometry for 5 axes
+  // Center: (150, 140), Radius: 85
+  const radarCx = 150;
+  const radarCy = 140;
+  const radarR = 85;
 
-  // Vertex angles:
-  // Top (AEO): -90 deg (-pi/2)
-  // Bottom-Right (GEO): 30 deg (pi/6)
-  // Bottom-Left (AIO): 150 deg (5pi/6)
-  const getRadarPoint = (score: number, angleRad: number) => {
-    const factor = Math.max(0, Math.min(100, score)) / 100;
-    const r = radarR * factor;
+  const radarAxes = [
+    { key: 'aeo', label: 'AEO', angle: -Math.PI / 2 }, // Top
+    { key: 'geo', label: 'GEO', angle: -Math.PI / 2 + (2 * Math.PI) / 5 }, // Top-Right
+    { key: 'aio', label: 'AIO', angle: -Math.PI / 2 + (4 * Math.PI) / 5 }, // Bottom-Right
+    { key: 'citations', label: 'Citations', angle: -Math.PI / 2 + (6 * Math.PI) / 5 }, // Bottom-Left
+    { key: 'coverage', label: 'Coverage', angle: -Math.PI / 2 + (8 * Math.PI) / 5 }, // Top-Left
+  ];
+
+  const getRadarCoords = (valuePct: number, angleRad: number) => {
+    const r = radarR * (Math.max(10, Math.min(100, valuePct)) / 100);
     const x = radarCx + r * Math.cos(angleRad);
     const y = radarCy + r * Math.sin(angleRad);
     return { x, y };
   };
 
-  const aeoAngle = -Math.PI / 2;
-  const geoAngle = Math.PI / 6;
-  const aioAngle = (5 * Math.PI) / 6;
+  // Datasets for Radar:
+  // Acme Corp
+  const acmeScores = { aeo: 78, geo: 62, aio: 70, citations: 68, coverage: 65 };
+  const acmePointsStr = radarAxes
+    .map((axis) => {
+      const coords = getRadarCoords(acmeScores[axis.key as keyof typeof acmeScores], axis.angle);
+      return `${coords.x},${coords.y}`;
+    })
+    .join(' ');
 
-  // Grid level polygons
-  const gridLevels = [0.25, 0.5, 0.75, 1.0];
+  // Industry Avg
+  const industryScores = { aeo: 66, geo: 56, aio: 61, citations: 55, coverage: 58 };
+  const industryPointsStr = radarAxes
+    .map((axis) => {
+      const coords = getRadarCoords(industryScores[axis.key as keyof typeof industryScores], axis.angle);
+      return `${coords.x},${coords.y}`;
+    })
+    .join(' ');
+
+  // Top Performer
+  const topScores = { aeo: 82, geo: 71, aio: 75, citations: 80, coverage: 78 };
+  const topPointsStr = radarAxes
+    .map((axis) => {
+      const coords = getRadarCoords(topScores[axis.key as keyof typeof topScores], axis.angle);
+      return `${coords.x},${coords.y}`;
+    })
+    .join(' ');
+
+  const gridLevels = [0.2, 0.4, 0.6, 0.8, 1.0];
+
+  const handleExportCSV = () => {
+    const headers = ['Rank', 'Company', 'AEO Score', 'GEO Score', 'AIO Score', 'Overall Score', 'Vs. Industry (%)'];
+    const rows = sortedCompetitors.map((c) => [
+      c.rank,
+      c.name,
+      c.aeo,
+      c.geo,
+      c.aio,
+      c.overall,
+      `${c.vsIndustry > 0 ? '+' : ''}${c.vsIndustry}%`,
+    ]);
+    const csvContent = 'data:text/csv;charset=utf-8,' + [headers.join(','), ...rows.map((r) => r.join(','))].join('\n');
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement('a');
+    link.setAttribute('href', encodedUri);
+    link.setAttribute('download', `industry_benchmarks_${activeTenant?.name?.toLowerCase().replace(/\s+/g, '-') || 'acme'}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
 
   return (
-    <div className="space-y-6 pb-8 select-none font-sans text-slate-900">
-      {/* 1. Top Row: 6 Model Metric Cards */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3.5">
-        {DEFAULT_MODELS.map((model) => {
-          const isHighlighted = hoveredModelId === model.id || selectedModelId === model.id;
-          return (
-            <div
-              key={model.id}
-              onClick={() => setSelectedModelId(selectedModelId === model.id ? null : model.id)}
-              onMouseEnter={() => setHoveredModelId(model.id)}
-              onMouseLeave={() => setHoveredModelId(null)}
-              className={`bg-white rounded-2xl p-4 border transition-all duration-150 cursor-pointer shadow-2xs ${
-                isHighlighted
-                  ? 'border-indigo-400 ring-2 ring-indigo-50 shadow-xs'
-                  : 'border-slate-100/90 hover:border-slate-200 hover:shadow-2xs'
-              }`}
-            >
-              {/* Header: Dot + Model Name */}
-              <div className="flex items-center space-x-2 mb-2">
-                <span className={`w-2 h-2 rounded-full ${model.dotBg} shrink-0`} />
-                <span className="text-xs font-semibold text-slate-800 tracking-tight truncate">
-                  {model.name}
-                </span>
-              </div>
-
-              {/* Large Score Number */}
-              <div className="text-2xl font-bold text-slate-900 tracking-tight">
-                {model.avgScore}
-              </div>
-
-              {/* Label */}
-              <div className="text-[11px] text-slate-400 font-medium mt-0.5">
-                Avg score
-              </div>
+    <div className="space-y-6 pb-12 select-none font-sans text-slate-900">
+      {/* 1. Top KPI Row: 4 Metric Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        {/* Card 1: VS. INDUSTRY AVG (AEO) */}
+        <div className="bg-white rounded-2xl border border-slate-100/90 p-5 shadow-xs flex flex-col justify-between hover:border-slate-200 transition-all">
+          <div>
+            <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400 font-mono">
+              VS. INDUSTRY AVG (AEO)
+            </span>
+            <div className="text-3xl font-bold text-slate-900 tracking-tight mt-1.5 font-mono flex items-baseline">
+              +12 <span className="text-sm font-normal text-slate-400 ml-1 font-sans">pts</span>
             </div>
-          );
-        })}
+          </div>
+          <div className="flex items-center justify-between mt-3 pt-1">
+            <span className="text-xs text-slate-400 font-normal">above industry average</span>
+            <span className="inline-flex items-center gap-0.5 px-2 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-600 border border-emerald-100/60">
+              <TrendingUp className="w-3 h-3 stroke-[2.5]" />
+              <span>+8.2%</span>
+            </span>
+          </div>
+        </div>
+
+        {/* Card 2: VS. INDUSTRY AVG (GEO) */}
+        <div className="bg-white rounded-2xl border border-slate-100/90 p-5 shadow-xs flex flex-col justify-between hover:border-slate-200 transition-all">
+          <div>
+            <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400 font-mono">
+              VS. INDUSTRY AVG (GEO)
+            </span>
+            <div className="text-3xl font-bold text-slate-900 tracking-tight mt-1.5 font-mono flex items-baseline">
+              +6 <span className="text-sm font-normal text-slate-400 ml-1 font-sans">pts</span>
+            </div>
+          </div>
+          <div className="flex items-center justify-between mt-3 pt-1">
+            <span className="text-xs text-slate-400 font-normal">above industry average</span>
+            <span className="inline-flex items-center gap-0.5 px-2 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-600 border border-emerald-100/60">
+              <TrendingUp className="w-3 h-3 stroke-[2.5]" />
+              <span>+4.1%</span>
+            </span>
+          </div>
+        </div>
+
+        {/* Card 3: VS. INDUSTRY AVG (AIO) */}
+        <div className="bg-white rounded-2xl border border-slate-100/90 p-5 shadow-xs flex flex-col justify-between hover:border-slate-200 transition-all">
+          <div>
+            <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400 font-mono">
+              VS. INDUSTRY AVG (AIO)
+            </span>
+            <div className="text-3xl font-bold text-slate-900 tracking-tight mt-1.5 font-mono flex items-baseline">
+              +9 <span className="text-sm font-normal text-slate-400 ml-1 font-sans">pts</span>
+            </div>
+          </div>
+          <div className="flex items-center justify-between mt-3 pt-1">
+            <span className="text-xs text-slate-400 font-normal">above industry average</span>
+            <span className="inline-flex items-center gap-0.5 px-2 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-600 border border-emerald-100/60">
+              <TrendingUp className="w-3 h-3 stroke-[2.5]" />
+              <span>+6.3%</span>
+            </span>
+          </div>
+        </div>
+
+        {/* Card 4: INDUSTRY RANK */}
+        <div className="bg-white rounded-2xl border border-slate-100/90 p-5 shadow-xs flex flex-col justify-between hover:border-slate-200 transition-all">
+          <div>
+            <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400 font-mono">
+              INDUSTRY RANK
+            </span>
+            <div className="text-3xl font-bold text-slate-900 tracking-tight mt-1.5 font-mono">
+              #3
+            </div>
+          </div>
+          <div className="flex items-center justify-between mt-3 pt-1">
+            <span className="text-xs text-slate-400 font-normal">of 7 tracked competitors</span>
+            <span className="inline-flex items-center gap-0.5 px-2 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-600 border border-emerald-100/60">
+              <TrendingUp className="w-3 h-3 stroke-[2.5]" />
+              <span>+1%</span>
+            </span>
+          </div>
+        </div>
       </div>
 
-      {/* 2. Middle Row: Score Radar & Side-by-Side Scores Charts */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-stretch">
-        {/* Left Card: Score Radar (5 cols on lg) */}
-        <div className="lg:col-span-5 bg-white rounded-2xl p-6 border border-slate-100/90 shadow-2xs flex flex-col justify-between">
+      {/* 2. Middle Row: Performance Radar (Left) & Gap to Top Performer (Right) */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 items-stretch">
+        {/* Left Card: Performance Radar */}
+        <div className="bg-white rounded-2xl p-6 border border-slate-100/90 shadow-xs flex flex-col justify-between">
           <div>
             <h2 className="text-sm font-bold text-slate-900 tracking-tight">
-              Score Radar
+              Performance Radar
             </h2>
             <p className="text-xs text-slate-400 mt-0.5">
-              Multi-metric shape comparison
+              Acme Corp vs. industry average vs. top performer
             </p>
           </div>
 
-          {/* SVG Radar Chart */}
+          {/* SVG Radar Graphic */}
           <div className="relative flex items-center justify-center my-auto py-2">
             <svg
-              viewBox="0 0 320 280"
-              className="w-full max-w-[300px] h-[250px] overflow-visible"
+              viewBox="0 0 300 280"
+              className="w-full max-w-[290px] h-[255px] overflow-visible"
             >
-              {/* Triangular Grid Lines */}
+              {/* Concentric Pentagon Grid */}
               {gridLevels.map((lvl, idx) => {
-                const ptA = getRadarPoint(100 * lvl, aeoAngle);
-                const ptG = getRadarPoint(100 * lvl, geoAngle);
-                const ptAi = getRadarPoint(100 * lvl, aioAngle);
-                const pointsStr = `${ptA.x},${ptA.y} ${ptG.x},${ptG.y} ${ptAi.x},${ptAi.y}`;
+                const ptsStr = radarAxes
+                  .map((axis) => {
+                    const coords = getRadarCoords(100 * lvl, axis.angle);
+                    return `${coords.x},${coords.y}`;
+                  })
+                  .join(' ');
+
                 return (
                   <polygon
                     key={idx}
-                    points={pointsStr}
+                    points={ptsStr}
                     fill="none"
                     stroke="#e2e8f0"
                     strokeWidth={idx === gridLevels.length - 1 ? '1.2' : '0.8'}
@@ -277,283 +384,277 @@ export function ModelComparisonDashboard() {
                 );
               })}
 
-              {/* Radial Axis Lines from Center to Vertices */}
-              {(() => {
-                const ptA = getRadarPoint(100, aeoAngle);
-                const ptG = getRadarPoint(100, geoAngle);
-                const ptAi = getRadarPoint(100, aioAngle);
+              {/* Radial Spokes from Center to each vertex */}
+              {radarAxes.map((axis) => {
+                const pt = getRadarCoords(100, axis.angle);
                 return (
-                  <>
-                    <line
-                      x1={radarCx}
-                      y1={radarCy}
-                      x2={ptA.x}
-                      y2={ptA.y}
-                      stroke="#cbd5e1"
-                      strokeWidth="1"
-                    />
-                    <line
-                      x1={radarCx}
-                      y1={radarCy}
-                      x2={ptG.x}
-                      y2={ptG.y}
-                      stroke="#cbd5e1"
-                      strokeWidth="1"
-                    />
-                    <line
-                      x1={radarCx}
-                      y1={radarCy}
-                      x2={ptAi.x}
-                      y2={ptAi.y}
-                      stroke="#cbd5e1"
-                      strokeWidth="1"
-                    />
-                  </>
-                );
-              })()}
-
-              {/* Model Shape Polygons */}
-              {DEFAULT_MODELS.map((model) => {
-                const ptA = getRadarPoint(model.aeo, aeoAngle);
-                const ptG = getRadarPoint(model.geo, geoAngle);
-                const ptAi = getRadarPoint(model.aio, aioAngle);
-                const pointsStr = `${ptA.x},${ptA.y} ${ptG.x},${ptG.y} ${ptAi.x},${ptAi.y}`;
-
-                const isSelected = selectedModelId === model.id;
-                const isHovered = hoveredModelId === model.id;
-                const hasFocus = isSelected || isHovered;
-                const isDimmed =
-                  (selectedModelId && !isSelected) || (hoveredModelId && !isHovered);
-
-                return (
-                  <g
-                    key={model.id}
-                    className="transition-all duration-200 cursor-pointer"
-                    onMouseEnter={() => setHoveredModelId(model.id)}
-                    onMouseLeave={() => setHoveredModelId(null)}
-                    onClick={() =>
-                      setSelectedModelId(selectedModelId === model.id ? null : model.id)
-                    }
-                  >
-                    <polygon
-                      points={pointsStr}
-                      fill={model.fillColor}
-                      stroke={model.strokeColor}
-                      strokeWidth={hasFocus ? '2.5' : '1.4'}
-                      opacity={isDimmed ? 0.2 : hasFocus ? 1 : 0.75}
-                    />
-                    {/* Vertex Dots */}
-                    <circle
-                      cx={ptA.x}
-                      cy={ptA.y}
-                      r={hasFocus ? 3.5 : 2}
-                      fill={model.strokeColor}
-                      opacity={isDimmed ? 0.2 : 0.9}
-                    />
-                    <circle
-                      cx={ptG.x}
-                      cy={ptG.y}
-                      r={hasFocus ? 3.5 : 2}
-                      fill={model.strokeColor}
-                      opacity={isDimmed ? 0.2 : 0.9}
-                    />
-                    <circle
-                      cx={ptAi.x}
-                      cy={ptAi.y}
-                      r={hasFocus ? 3.5 : 2}
-                      fill={model.strokeColor}
-                      opacity={isDimmed ? 0.2 : 0.9}
-                    />
-                  </g>
+                  <line
+                    key={axis.key}
+                    x1={radarCx}
+                    y1={radarCy}
+                    x2={pt.x}
+                    y2={pt.y}
+                    stroke="#e2e8f0"
+                    strokeWidth="1"
+                  />
                 );
               })}
 
-              {/* Axis Vertex Labels */}
+              {/* Series 1: Industry Avg (Gray Dashed) */}
+              <polygon
+                points={industryPointsStr}
+                fill="none"
+                stroke="#94a3b8"
+                strokeWidth="1.6"
+                strokeDasharray="4 3"
+              />
+              {radarAxes.map((axis) => {
+                const pt = getRadarCoords(industryScores[axis.key as keyof typeof industryScores], axis.angle);
+                return (
+                  <circle
+                    key={`ind-${axis.key}`}
+                    cx={pt.x}
+                    cy={pt.y}
+                    r="2.5"
+                    fill="#94a3b8"
+                  />
+                );
+              })}
+
+              {/* Series 2: Top Performer (Green Dotted) */}
+              <polygon
+                points={topPointsStr}
+                fill="none"
+                stroke="#10b981"
+                strokeWidth="1.6"
+                strokeDasharray="2 2"
+              />
+              {radarAxes.map((axis) => {
+                const pt = getRadarCoords(topScores[axis.key as keyof typeof topScores], axis.angle);
+                return (
+                  <circle
+                    key={`top-${axis.key}`}
+                    cx={pt.x}
+                    cy={pt.y}
+                    r="2.5"
+                    fill="#10b981"
+                  />
+                );
+              })}
+
+              {/* Series 3: Acme Corp (Purple/Blue Solid with Shaded Fill) */}
+              <polygon
+                points={acmePointsStr}
+                fill="rgba(99, 102, 241, 0.16)"
+                stroke="#6366f1"
+                strokeWidth="2"
+                className="transition-all duration-300"
+              />
+              {radarAxes.map((axis) => {
+                const pt = getRadarCoords(acmeScores[axis.key as keyof typeof acmeScores], axis.angle);
+                return (
+                  <circle
+                    key={`acme-${axis.key}`}
+                    cx={pt.x}
+                    cy={pt.y}
+                    r="3.5"
+                    fill="#6366f1"
+                    stroke="#ffffff"
+                    strokeWidth="1.5"
+                    className="cursor-pointer hover:r-5 transition-all"
+                    onMouseEnter={() => setHoveredRadarAxis(axis.label)}
+                    onMouseLeave={() => setHoveredRadarAxis(null)}
+                  />
+                );
+              })}
+
+              {/* Axis Labels */}
+              {/* Top: AEO */}
               <text
                 x={radarCx}
-                y={radarCy - radarR - 12}
+                y={radarCy - radarR - 10}
                 textAnchor="middle"
-                className="text-[11px] font-bold fill-slate-500 font-mono tracking-wider"
+                className="text-[11px] font-semibold fill-slate-500 font-sans"
               >
                 AEO
               </text>
+              {/* Top-Right: GEO */}
               <text
-                x={radarCx + radarR * Math.cos(geoAngle) + 14}
-                y={radarCy + radarR * Math.sin(geoAngle) + 4}
+                x={radarCx + radarR * Math.cos(radarAxes[1].angle) + 12}
+                y={radarCy + radarR * Math.sin(radarAxes[1].angle) - 2}
                 textAnchor="start"
-                className="text-[11px] font-bold fill-slate-500 font-mono tracking-wider"
+                className="text-[11px] font-semibold fill-slate-500 font-sans"
               >
                 GEO
               </text>
+              {/* Bottom-Right: AIO */}
               <text
-                x={radarCx - radarR * Math.cos(geoAngle) - 14}
-                y={radarCy + radarR * Math.sin(geoAngle) + 4}
-                textAnchor="end"
-                className="text-[11px] font-bold fill-slate-500 font-mono tracking-wider"
+                x={radarCx + radarR * Math.cos(radarAxes[2].angle) + 10}
+                y={radarCy + radarR * Math.sin(radarAxes[2].angle) + 10}
+                textAnchor="start"
+                className="text-[11px] font-semibold fill-slate-500 font-sans"
               >
                 AIO
+              </text>
+              {/* Bottom-Left: Citations */}
+              <text
+                x={radarCx + radarR * Math.cos(radarAxes[3].angle) - 10}
+                y={radarCy + radarR * Math.sin(radarAxes[3].angle) + 10}
+                textAnchor="end"
+                className="text-[11px] font-semibold fill-slate-500 font-sans"
+              >
+                Citations
+              </text>
+              {/* Top-Left: Coverage */}
+              <text
+                x={radarCx + radarR * Math.cos(radarAxes[4].angle) - 12}
+                y={radarCy + radarR * Math.sin(radarAxes[4].angle) - 2}
+                textAnchor="end"
+                className="text-[11px] font-semibold fill-slate-500 font-sans"
+              >
+                Coverage
               </text>
             </svg>
           </div>
 
-          {/* Bottom helper tip */}
-          <div className="text-center text-[10px] text-slate-400 mt-1">
-            {hoveredModelId
-              ? `${DEFAULT_MODELS.find((m) => m.id === hoveredModelId)?.name}: AEO ${
-                  DEFAULT_MODELS.find((m) => m.id === hoveredModelId)?.aeo
-                } · GEO ${
-                  DEFAULT_MODELS.find((m) => m.id === hoveredModelId)?.geo
-                } · AIO ${
-                  DEFAULT_MODELS.find((m) => m.id === hoveredModelId)?.aio
-                }`
-              : 'Hover or click models to inspect polygon metric distribution'}
+          {/* Radar Legend */}
+          <div className="flex items-center justify-center space-x-6 pt-2 text-xs">
+            <div className="flex items-center space-x-1.5">
+              <span className="w-2 h-2 rounded-full bg-[#6366f1]" />
+              <span className="text-slate-600 font-medium">Acme Corp</span>
+            </div>
+            <div className="flex items-center space-x-1.5">
+              <span className="w-2 h-2 rounded-full bg-[#94a3b8]" />
+              <span className="text-slate-600 font-medium">Industry Avg</span>
+            </div>
+            <div className="flex items-center space-x-1.5">
+              <span className="w-2 h-2 rounded-full bg-[#10b981]" />
+              <span className="text-slate-600 font-medium">Top Performer</span>
+            </div>
           </div>
         </div>
 
-        {/* Right Card: Side-by-Side Scores (7 cols on lg) */}
-        <div className="lg:col-span-7 bg-white rounded-2xl p-6 border border-slate-100/90 shadow-2xs flex flex-col justify-between">
+        {/* Right Card: Gap to Top Performer */}
+        <div className="bg-white rounded-2xl p-6 border border-slate-100/90 shadow-xs flex flex-col justify-between">
           <div>
             <h2 className="text-sm font-bold text-slate-900 tracking-tight">
-              Side-by-Side Scores
+              Gap to Top Performer
             </h2>
             <p className="text-xs text-slate-400 mt-0.5">
-              AEO, GEO &amp; AIO per selected model
+              Points needed to reach category leader
             </p>
           </div>
 
-          {/* Bar Chart Visualization */}
-          <div className="relative pt-6 pb-2 px-2">
-            {/* Chart Area */}
-            <div className="relative h-[200px] w-full flex items-end">
-              {/* Y-Axis Grid Lines and Labels */}
-              <div className="absolute inset-0 flex flex-col justify-between pointer-events-none">
-                {[100, 75, 50, 25, 0].map((val) => (
-                  <div key={val} className="flex items-center w-full">
-                    <span className="text-[10px] font-medium text-slate-400 w-7 text-right pr-2 shrink-0 font-mono">
-                      {val}
-                    </span>
-                    <div className="w-full border-b border-slate-100 border-dashed" />
+          {/* Horizontal Bars Container */}
+          <div className="space-y-4 my-auto py-2">
+            {GAP_ITEMS.map((item) => {
+              const maxScale = 30;
+              const barWidthPct = (item.gap / maxScale) * 100;
+              const isHovered = hoveredGap?.id === item.id;
+
+              return (
+                <div
+                  key={item.id}
+                  onMouseEnter={() => setHoveredGap(item)}
+                  onMouseLeave={() => setHoveredGap(null)}
+                  className="flex items-center group relative cursor-pointer"
+                >
+                  {/* Left Label */}
+                  <div className="w-24 text-right pr-3 text-xs font-semibold text-slate-500 group-hover:text-slate-800 transition-colors">
+                    {item.label}
                   </div>
-                ))}
-              </div>
 
-              {/* Bars Container */}
-              <div className="relative w-full h-full pl-8 pr-2 flex items-end justify-between">
-                {DEFAULT_MODELS.map((model) => {
-                  const isHovered = hoveredModelId === model.id;
-                  const isSelected = selectedModelId === model.id;
-                  const isDimmed =
-                    (selectedModelId && !isSelected) || (hoveredModelId && !isHovered);
-
-                  // Normalized height based on score (e.g. 78% of 100%)
-                  const barHeightPct = Math.max(10, model.aeo);
-
-                  return (
+                  {/* Horizontal Bar Track */}
+                  <div className="flex-1 bg-slate-50 h-3.5 rounded-full overflow-hidden relative">
                     <div
-                      key={model.id}
-                      onMouseEnter={() => setHoveredModelId(model.id)}
-                      onMouseLeave={() => setHoveredModelId(null)}
-                      onClick={() =>
-                        setSelectedModelId(selectedModelId === model.id ? null : model.id)
-                      }
-                      className="group relative flex-1 flex flex-col items-center justify-end h-full cursor-pointer px-2"
-                    >
-                      {/* Hover Tooltip */}
-                      {isHovered && (
-                        <div className="absolute -top-10 bg-slate-900 text-white text-[10px] font-medium py-1 px-2 rounded-md shadow-md z-30 pointer-events-none whitespace-nowrap animate-in fade-in zoom-in-95">
-                          {model.name}: AEO {model.aeo} | GEO {model.geo} | AIO {model.aio}
-                        </div>
-                      )}
+                      className={`h-full rounded-full transition-all duration-500 ease-out ${item.barBg} ${
+                        isHovered ? 'brightness-110 shadow-xs' : ''
+                      }`}
+                      style={{ width: `${barWidthPct}%` }}
+                    />
+                  </div>
 
-                      {/* Single / Clustered Orange Bar matching screenshot */}
-                      <div
-                        className={`w-3.5 sm:w-4 rounded-t-sm transition-all duration-200 ${
-                          isDimmed ? 'opacity-30' : 'opacity-100'
-                        } ${
-                          isHovered || isSelected
-                            ? 'bg-[#ea580c] shadow-xs'
-                            : 'bg-[#ea580c]/90 hover:bg-[#ea580c]'
-                        }`}
-                        style={{
-                          height: `${(model.aeo / 100) * 100}%`,
-                          backgroundColor: '#f97316',
-                        }}
-                      />
-
-                      {/* Model Label below bar */}
-                      <span
-                        className={`text-[11px] mt-3 font-medium truncate transition-colors text-center ${
-                          isHovered || isSelected
-                            ? 'text-slate-900 font-bold'
-                            : 'text-slate-500'
-                        }`}
-                      >
-                        {model.shortName}
-                      </span>
+                  {/* Hover Tooltip */}
+                  {isHovered && (
+                    <div className="absolute left-28 -top-8 bg-slate-900 text-white text-[11px] font-medium py-1 px-2.5 rounded-lg shadow-lg z-30 pointer-events-none whitespace-nowrap animate-in fade-in zoom-in-95">
+                      {item.label}: <span className="font-bold text-amber-300">{item.gap} pts</span> gap to reach leader ({item.topScore} pts vs your {item.yourScore} pts)
                     </div>
-                  );
-                })}
-              </div>
-            </div>
-          </div>
+                  )}
+                </div>
+              );
+            })}
 
-          {/* Bottom Legend */}
-          <div className="flex items-center space-x-5 pt-3 pl-8 text-xs">
-            <div className="flex items-center space-x-1.5">
-              <span className="w-2 h-2 rounded-full bg-[#06b6d4]" />
-              <span className="text-[11px] font-medium text-slate-500">AEO</span>
-            </div>
-            <div className="flex items-center space-x-1.5">
-              <span className="w-2 h-2 rounded-full bg-[#8b5cf6]" />
-              <span className="text-[11px] font-medium text-slate-500">GEO</span>
-            </div>
-            <div className="flex items-center space-x-1.5">
-              <span className="w-2 h-2 rounded-full bg-[#f97316]" />
-              <span className="text-[11px] font-medium text-slate-500">AIO</span>
+            {/* X-Axis Tick Scale Line & Labels */}
+            <div className="pt-2 pl-24 flex justify-between text-[11px] font-mono text-slate-400 border-t border-slate-100/80 mt-2">
+              <span>0</span>
+              <span>8</span>
+              <span>16</span>
+              <span>30</span>
             </div>
           </div>
         </div>
       </div>
 
-      {/* 3. Bottom Row: Full Comparison Table Card */}
-      <div className="bg-white rounded-2xl border border-slate-100/90 shadow-2xs overflow-hidden">
-        {/* Table Header Section */}
-        <div className="p-6 border-b border-slate-100/80 flex items-center justify-between">
+      {/* 3. Bottom Table Card: Full Industry Benchmark */}
+      <div className="bg-white rounded-2xl border border-slate-100/90 shadow-xs overflow-hidden">
+        {/* Table Header */}
+        <div className="p-6 border-b border-slate-100/80 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
-            <h2 className="text-sm font-bold text-slate-900 tracking-tight">
-              Full Comparison Table
+            <h2 className="text-base font-bold text-slate-900 tracking-tight">
+              Full Industry Benchmark
             </h2>
             <p className="text-xs text-slate-400 mt-0.5">
-              All metrics for selected models
+              All competitors ranked by overall AI visibility score
             </p>
           </div>
 
-          <button
-            type="button"
-            onClick={handleExportCSV}
-            className="flex items-center space-x-1.5 px-3 py-1.5 rounded-xl border border-slate-200/80 bg-white hover:bg-slate-50 text-xs font-semibold text-slate-600 hover:text-slate-900 transition-colors shadow-2xs cursor-pointer"
-            title="Export model comparison data as CSV"
-          >
-            <Download className="w-3.5 h-3.5 text-slate-500" />
-            <span>Export CSV</span>
-          </button>
+          <div className="flex items-center space-x-4">
+            {/* Legend marker */}
+            <div className="flex items-center space-x-1.5 text-xs text-slate-400 font-medium">
+              <span className="w-5 border-b border-slate-300 border-dashed" />
+              <span>Industry avg</span>
+            </div>
+
+            <button
+              onClick={handleExportCSV}
+              className="inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-xl border border-slate-200/80 bg-white hover:bg-slate-50 text-xs font-semibold text-slate-700 transition-colors shadow-2xs cursor-pointer"
+            >
+              <Download className="w-3.5 h-3.5 text-slate-500" />
+              <span>Export CSV</span>
+            </button>
+          </div>
         </div>
 
         {/* Table Content */}
         <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse">
+          <table className="w-full text-left border-collapse text-xs">
             <thead>
-              <tr className="border-b border-slate-100/90 bg-slate-50/40">
+              <tr className="border-b border-slate-100 bg-slate-50/50 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
                 <th
-                  onClick={() => handleSort('name')}
-                  className="py-3 px-6 text-[10px] font-bold text-slate-400 uppercase tracking-wider cursor-pointer hover:text-slate-700 transition-colors"
+                  onClick={() => handleSort('rank')}
+                  className="py-3 px-6 cursor-pointer hover:text-slate-700 transition-colors w-16"
                 >
                   <div className="flex items-center space-x-1">
-                    <span>MODEL</span>
+                    <span>RANK</span>
+                    {sortField === 'rank' && (
+                      <ChevronDown
+                        className={`w-3 h-3 transition-transform ${
+                          sortDirection === 'desc' ? 'rotate-180' : ''
+                        }`}
+                      />
+                    )}
+                  </div>
+                </th>
+                <th
+                  onClick={() => handleSort('name')}
+                  className="py-3 px-6 cursor-pointer hover:text-slate-700 transition-colors"
+                >
+                  <div className="flex items-center space-x-1">
+                    <span>COMPANY</span>
                     {sortField === 'name' && (
                       <ChevronDown
                         className={`w-3 h-3 transition-transform ${
-                          sortDirection === 'asc' ? 'rotate-180' : ''
+                          sortDirection === 'desc' ? 'rotate-180' : ''
                         }`}
                       />
                     )}
@@ -561,14 +662,14 @@ export function ModelComparisonDashboard() {
                 </th>
                 <th
                   onClick={() => handleSort('aeo')}
-                  className="py-3 px-6 text-[10px] font-bold text-slate-400 uppercase tracking-wider cursor-pointer hover:text-slate-700 transition-colors"
+                  className="py-3 px-6 text-center cursor-pointer hover:text-slate-700 transition-colors w-24"
                 >
-                  <div className="flex items-center space-x-1">
+                  <div className="flex items-center justify-center space-x-1">
                     <span>AEO</span>
                     {sortField === 'aeo' && (
                       <ChevronDown
                         className={`w-3 h-3 transition-transform ${
-                          sortDirection === 'asc' ? 'rotate-180' : ''
+                          sortDirection === 'desc' ? 'rotate-180' : ''
                         }`}
                       />
                     )}
@@ -576,14 +677,14 @@ export function ModelComparisonDashboard() {
                 </th>
                 <th
                   onClick={() => handleSort('geo')}
-                  className="py-3 px-6 text-[10px] font-bold text-slate-400 uppercase tracking-wider cursor-pointer hover:text-slate-700 transition-colors"
+                  className="py-3 px-6 text-center cursor-pointer hover:text-slate-700 transition-colors w-24"
                 >
-                  <div className="flex items-center space-x-1">
+                  <div className="flex items-center justify-center space-x-1">
                     <span>GEO</span>
                     {sortField === 'geo' && (
                       <ChevronDown
                         className={`w-3 h-3 transition-transform ${
-                          sortDirection === 'asc' ? 'rotate-180' : ''
+                          sortDirection === 'desc' ? 'rotate-180' : ''
                         }`}
                       />
                     )}
@@ -591,59 +692,44 @@ export function ModelComparisonDashboard() {
                 </th>
                 <th
                   onClick={() => handleSort('aio')}
-                  className="py-3 px-6 text-[10px] font-bold text-slate-400 uppercase tracking-wider cursor-pointer hover:text-slate-700 transition-colors"
+                  className="py-3 px-6 text-center cursor-pointer hover:text-slate-700 transition-colors w-24"
                 >
-                  <div className="flex items-center space-x-1">
+                  <div className="flex items-center justify-center space-x-1">
                     <span>AIO</span>
                     {sortField === 'aio' && (
                       <ChevronDown
                         className={`w-3 h-3 transition-transform ${
-                          sortDirection === 'asc' ? 'rotate-180' : ''
+                          sortDirection === 'desc' ? 'rotate-180' : ''
                         }`}
                       />
                     )}
                   </div>
                 </th>
                 <th
-                  onClick={() => handleSort('avgScore')}
-                  className="py-3 px-6 text-[10px] font-bold text-slate-400 uppercase tracking-wider cursor-pointer hover:text-slate-700 transition-colors"
+                  onClick={() => handleSort('overall')}
+                  className="py-3 px-6 text-center cursor-pointer hover:text-slate-700 transition-colors w-28"
                 >
-                  <div className="flex items-center space-x-1">
-                    <span>AVG</span>
-                    {sortField === 'avgScore' && (
+                  <div className="flex items-center justify-center space-x-1">
+                    <span>OVERALL</span>
+                    {sortField === 'overall' && (
                       <ChevronDown
                         className={`w-3 h-3 transition-transform ${
-                          sortDirection === 'asc' ? 'rotate-180' : ''
+                          sortDirection === 'desc' ? 'rotate-180' : ''
                         }`}
                       />
                     )}
                   </div>
                 </th>
                 <th
-                  onClick={() => handleSort('citations')}
-                  className="py-3 px-6 text-[10px] font-bold text-slate-400 uppercase tracking-wider cursor-pointer hover:text-slate-700 transition-colors"
+                  onClick={() => handleSort('vsIndustry')}
+                  className="py-3 px-6 text-right cursor-pointer hover:text-slate-700 transition-colors w-36"
                 >
-                  <div className="flex items-center space-x-1">
-                    <span>CITATIONS</span>
-                    {sortField === 'citations' && (
+                  <div className="flex items-center justify-end space-x-1">
+                    <span>VS. INDUSTRY</span>
+                    {sortField === 'vsIndustry' && (
                       <ChevronDown
                         className={`w-3 h-3 transition-transform ${
-                          sortDirection === 'asc' ? 'rotate-180' : ''
-                        }`}
-                      />
-                    )}
-                  </div>
-                </th>
-                <th
-                  onClick={() => handleSort('momTrend')}
-                  className="py-3 px-6 text-[10px] font-bold text-slate-400 uppercase tracking-wider cursor-pointer hover:text-slate-700 transition-colors"
-                >
-                  <div className="flex items-center space-x-1">
-                    <span>MOM TREND</span>
-                    {sortField === 'momTrend' && (
-                      <ChevronDown
-                        className={`w-3 h-3 transition-transform ${
-                          sortDirection === 'asc' ? 'rotate-180' : ''
+                          sortDirection === 'desc' ? 'rotate-180' : ''
                         }`}
                       />
                     )}
@@ -652,99 +738,88 @@ export function ModelComparisonDashboard() {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-50">
-              {models.map((model) => {
-                const isSelected = selectedModelId === model.id;
-                const isHovered = hoveredModelId === model.id;
+              {sortedCompetitors.map((item) => {
+                const isSelected = selectedCompetitor ? isCompetitorMatch(item.name) : false;
+                const isDimmed = selectedCompetitor ? !isSelected : false;
+                const isPositive = item.vsIndustry >= 0;
 
                 return (
                   <tr
-                    key={model.id}
-                    onMouseEnter={() => setHoveredModelId(model.id)}
-                    onMouseLeave={() => setHoveredModelId(null)}
-                    onClick={() =>
-                      setSelectedModelId(selectedModelId === model.id ? null : model.id)
-                    }
-                    className={`transition-colors duration-150 cursor-pointer ${
+                    key={item.name}
+                    onClick={() => toggleSelectedCompetitor(item.name)}
+                    className={`transition-all duration-300 cursor-pointer ${
                       isSelected
-                        ? 'bg-indigo-50/40'
-                        : isHovered
-                        ? 'bg-slate-50/70'
-                        : 'hover:bg-slate-50/50'
+                        ? 'bg-indigo-50/70 opacity-100 font-semibold'
+                        : isDimmed
+                        ? 'opacity-30 hover:opacity-80'
+                        : 'hover:bg-slate-50/60 opacity-100'
                     }`}
                   >
-                    {/* Model Name with Dot */}
-                    <td className="py-4 px-6">
-                      <div className="flex items-center space-x-2.5">
-                        <span className={`w-2 h-2 rounded-full ${model.dotBg} shrink-0`} />
-                        <span className="text-xs font-bold text-slate-900 tracking-tight">
-                          {model.name}
-                        </span>
+                    {/* Rank */}
+                    <td className="py-4 px-6 whitespace-nowrap">
+                      <div className="w-6 flex items-center justify-center">
+                        {item.rank === 1 && <span className="text-base">🥇</span>}
+                        {item.rank === 2 && <span className="text-base">🥈</span>}
+                        {item.rank === 3 && <span className="text-base">🥉</span>}
+                        {item.rank > 3 && (
+                          <span className="font-semibold text-slate-400 font-mono">
+                            {item.rank}
+                          </span>
+                        )}
                       </div>
                     </td>
 
-                    {/* AEO Score + Teal Mini Bar */}
-                    <td className="py-4 px-6">
-                      <div className="flex items-center space-x-2.5">
-                        <span className="text-xs font-semibold text-[#06b6d4] font-mono w-5">
-                          {model.aeo}
+                    {/* Company Name + YOU Badge */}
+                    <td className="py-4 px-6 whitespace-nowrap">
+                      <div className="flex items-center space-x-2">
+                        <span className="font-bold text-slate-900 text-xs tracking-tight">
+                          {item.name}
                         </span>
-                        <div className="w-14 h-1.5 rounded-full bg-slate-100 overflow-hidden">
-                          <div
-                            className="h-full rounded-full bg-[#06b6d4]"
-                            style={{ width: `${model.aeo}%` }}
-                          />
-                        </div>
+                        {item.isTargetBrand && (
+                          <span className="px-1.5 py-0.2 text-[9px] font-bold tracking-wider uppercase font-mono rounded-md bg-indigo-50 text-indigo-600 border border-indigo-100">
+                            YOU
+                          </span>
+                        )}
                       </div>
                     </td>
 
-                    {/* GEO Score + Purple Mini Bar */}
-                    <td className="py-4 px-6">
-                      <div className="flex items-center space-x-2.5">
-                        <span className="text-xs font-semibold text-[#8b5cf6] font-mono w-5">
-                          {model.geo}
+                    {/* AEO (Teal/Cyan) */}
+                    <td className="py-4 px-6 text-center font-bold text-[#06b6d4] font-mono text-xs">
+                      {item.aeo}
+                    </td>
+
+                    {/* GEO (Purple) */}
+                    <td className="py-4 px-6 text-center font-bold text-[#8b5cf6] font-mono text-xs">
+                      {item.geo}
+                    </td>
+
+                    {/* AIO (Orange) */}
+                    <td className="py-4 px-6 text-center font-bold text-[#f97316] font-mono text-xs">
+                      {item.aio}
+                    </td>
+
+                    {/* Overall (Bold Dark) */}
+                    <td className="py-4 px-6 text-center font-bold text-slate-900 font-mono text-xs">
+                      {item.overall}
+                    </td>
+
+                    {/* Vs. Industry (Green / Red Delta Badge) */}
+                    <td className="py-4 px-6 text-right whitespace-nowrap">
+                      <span
+                        className={`inline-flex items-center gap-0.5 px-2 py-0.5 rounded-full text-[11px] font-semibold border ${
+                          isPositive
+                            ? 'bg-emerald-50 text-emerald-600 border-emerald-100/60'
+                            : 'bg-rose-50 text-rose-600 border-rose-100/60'
+                        }`}
+                      >
+                        {isPositive ? (
+                          <TrendingUp className="w-3 h-3 stroke-[2.5]" />
+                        ) : (
+                          <TrendingDown className="w-3 h-3 stroke-[2.5]" />
+                        )}
+                        <span>
+                          {isPositive ? `+${item.vsIndustry}%` : `${item.vsIndustry}%`}
                         </span>
-                        <div className="w-14 h-1.5 rounded-full bg-slate-100 overflow-hidden">
-                          <div
-                            className="h-full rounded-full bg-[#8b5cf6]"
-                            style={{ width: `${model.geo}%` }}
-                          />
-                        </div>
-                      </div>
-                    </td>
-
-                    {/* AIO Score + Orange Mini Bar */}
-                    <td className="py-4 px-6">
-                      <div className="flex items-center space-x-2.5">
-                        <span className="text-xs font-semibold text-[#f97316] font-mono w-5">
-                          {model.aio}
-                        </span>
-                        <div className="w-14 h-1.5 rounded-full bg-slate-100 overflow-hidden">
-                          <div
-                            className="h-full rounded-full bg-[#f97316]"
-                            style={{ width: `${model.aio}%` }}
-                          />
-                        </div>
-                      </div>
-                    </td>
-
-                    {/* AVG Score */}
-                    <td className="py-4 px-6">
-                      <span className="text-xs font-bold text-slate-900 font-mono">
-                        {model.avgScore}
-                      </span>
-                    </td>
-
-                    {/* Citations Count */}
-                    <td className="py-4 px-6">
-                      <span className="text-xs font-medium text-slate-600 font-mono">
-                        {model.citations.toLocaleString()}
-                      </span>
-                    </td>
-
-                    {/* MoM Trend Badge */}
-                    <td className="py-4 px-6">
-                      <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-100">
-                        +{model.momTrend}%
                       </span>
                     </td>
                   </tr>
