@@ -6,7 +6,7 @@ export type Json =
   | { [key: string]: Json | undefined }
   | Json[];
 
-export type AIPlatform = 'chatgpt' | 'perplexity' | 'gemini' | 'copilot' | 'claude';
+export type AIPlatform = 'chatgpt' | 'perplexity' | 'gemini' | 'copilot' | 'claude' | 'meta';
 export type MentionSentiment = 'positive' | 'neutral' | 'negative' | 'mixed';
 export type TenantRole = 'owner' | 'admin' | 'member' | 'viewer';
 

@@ -1,32 +1,32 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase/admin';
-import { GeminiTrackingService } from '@/lib/services/gemini-tracking-service';
 import { CronLoggerService } from '@/lib/services/cron-logger';
-import { validatePromptLimit } from '@/lib/subscription-limits';
+import { globalMultiEngineWorker, TrackingTask } from '@/lib/services/multi-engine-tracking-worker';
+import { EngineId } from '@/lib/services/engines/engine-types';
 import type { Database } from '@/types/database';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 300; // Vercel 5 min maximum execution limit for background serverless jobs
 
 /**
- * Vercel Serverless Automated Cron Handler - Unified Weekly Calculation Schedule
+ * Vercel Serverless Automated Cron Handler - Multi-Engine Weekly Tracking Schedule
  *
  * Schedule: 0 0 * * 0 (Every Sunday at 00:00 UTC)
  * Configured in: vercel.json
  *
- * Pillar Executions:
- * - AIO Score: Weekly technical health and schema audit
- * - AEO Score: Weekly aggregated scoring based on the latest prompt tracking batch
- * - GEO Score: Weekly rolling aggregation of sentiment, context, and cross-model citations
- * - Overall Visibility Score: Recalculated and stored alongside pillar metrics
- *
- * Security:
- * - Requires Authorization: Bearer <CRON_SECRET> header supplied by Vercel Cron.
+ * Engines Covered:
+ * - Google Gemini (Gemini 1.5 Flash with Search Grounding)
+ * - Perplexity AI (Sonar Search Grounded)
+ * - OpenAI (ChatGPT / GPT-4o with Search Ranking)
+ * - Anthropic (Claude 3.5 Sonnet Deep Analysis)
+ * - Microsoft Copilot (Bing Search Grounding)
+ * - Meta AI (Llama 3 Conversational Extraction)
  *
  * Execution:
  * - Uses createAdminClient() with Supabase / Supavisor connection pooling.
- * - Executes multi-model visibility extraction and scoring across active campaigns.
- * - Logs all execution outcomes to the CronLogs table.
+ * - Concurrency-limited asynchronous queue worker (max 4 concurrent requests).
+ * - Exponential backoff retry with jitter on API rate limits.
+ * - Logs all execution outcomes and metrics to the CronLogs table.
  */
 export async function GET(req: NextRequest) {
   return handleCronTracking(req);
@@ -48,6 +48,7 @@ async function handleCronTracking(req: NextRequest) {
     const { searchParams } = new URL(req.url);
     const querySecret = searchParams.get('secret') || searchParams.get('cronSecret');
     const dryRun = searchParams.get('dryRun') === 'true';
+    const requestedEngine = searchParams.get('engine') as EngineId | null;
 
     const expectedSecret = process.env.CRON_SECRET;
 
@@ -70,12 +71,16 @@ async function handleCronTracking(req: NextRequest) {
 
     // 2. Initialize Service Role Supabase Client with Supavisor Connection Pooling
     supabase = createAdminClient();
-    const geminiService = new GeminiTrackingService();
+
+    // Determine target engines (default: full multi-engine suite)
+    const targetEngines: EngineId[] = requestedEngine
+      ? [requestedEngine]
+      : ['gemini', 'perplexity', 'chatgpt', 'claude', 'copilot', 'meta'];
 
     // 3. Start Cron Execution Log
     const logInfo = await CronLoggerService.startCronRun(supabase, {
       jobName: 'track-citations',
-      engine: 'gemini-1.5-flash',
+      engine: targetEngines.join(', '),
     });
     logId = logInfo.logId;
 
@@ -101,7 +106,7 @@ async function handleCronTracking(req: NextRequest) {
         processedQueries: 0,
         successfulQueries: 0,
         failedQueries: 0,
-        engine: 'gemini-1.5-flash',
+        engine: targetEngines.join(', '),
         details: { message: 'No active campaigns configured for tracking.' },
       });
 
@@ -114,11 +119,8 @@ async function handleCronTracking(req: NextRequest) {
       });
     }
 
-    // 5. Build queue of tracking tasks across all campaigns
-    const tasks: Array<{
-      campaign: CampaignRow;
-      query: string;
-    }> = [];
+    // 5. Build queue of tracking tasks across active campaigns and target engines
+    const tasks: TrackingTask[] = [];
 
     for (const campaign of campaigns) {
       const queries = campaign.target_queries && campaign.target_queries.length > 0
@@ -126,91 +128,22 @@ async function handleCronTracking(req: NextRequest) {
         : [`best solutions for ${campaign.brand_name}`];
 
       for (const query of queries) {
-        tasks.push({ campaign, query });
+        for (const engineId of targetEngines) {
+          tasks.push({ campaign, query, engineId });
+        }
       }
     }
 
-    const queryExecutionResults: any[] = [];
-    let successfulQueries = 0;
-    let failedQueries = 0;
-
-    // 6. Execute Gemini 1.5 Flash Tracking Loop
-    for (const { campaign, query } of tasks) {
-      try {
-        // Enforce subscription quota limits
-        if (!dryRun) {
-          const quota = await validatePromptLimit(supabase, campaign.tenant_id, 1);
-          if (!quota.allowed) {
-            queryExecutionResults.push({
-              tenantId: campaign.tenant_id,
-              campaignId: campaign.id,
-              query,
-              skipped: true,
-              reason: 'Daily prompt limit reached for subscription tier',
-            });
-            continue;
-          }
-        }
-
-        // Run Gemini 1.5 Flash AIO extraction
-        const campaignAliases = Array.from(
-          new Set([
-            ...(Array.isArray(campaign.aliases) ? campaign.aliases : []),
-            ...(Array.isArray(campaign.brand_aliases) ? campaign.brand_aliases : [])
-          ])
-        );
-
-        const geminiResult = await geminiService.executeAIOQuery({
-          query,
-          brandName: campaign.brand_name,
-          brandDomain: campaign.target_domain || `${campaign.brand_name.toLowerCase().replace(/\s+/g, '')}.com`,
-          brandAliases: campaignAliases,
-          aliases: campaignAliases,
-          competitors: campaign.competitors || ['Competitor A', 'Competitor B'],
-        });
-
-        if (!dryRun) {
-          // Persist atomically to Supabase
-          const saved = await geminiService.persistGeminiResult(
-            supabase,
-            campaign,
-            query,
-            geminiResult
-          );
-
-          queryExecutionResults.push({
-            citationId: saved.id,
-            tenantId: campaign.tenant_id,
-            campaignId: campaign.id,
-            brandName: campaign.brand_name,
-            query,
-            engine: 'gemini-1.5-flash',
-            isLiveGemini: geminiResult.isLiveGemini,
-            brandMentioned: geminiResult.data.mentions.some((m) => m.is_primary),
-            shareOfVoice: geminiResult.data.share_of_voice_score || 50.0,
-            citationsExtracted: geminiResult.data.citations.length,
-          });
-        } else {
-          queryExecutionResults.push({
-            mode: 'dry_run',
-            campaignId: campaign.id,
-            brandName: campaign.brand_name,
-            query,
-            shareOfVoice: geminiResult.data.share_of_voice_score || 50.0,
-          });
-        }
-
-        successfulQueries++;
-      } catch (queryErr: any) {
-        failedQueries++;
-        console.error(`Error processing query "${query}" for campaign ${campaign.id}:`, queryErr);
-        queryExecutionResults.push({
-          campaignId: campaign.id,
-          query,
-          error: queryErr?.message || 'Query tracking failed',
-        });
+    // 6. Execute Batch via Resilient Multi-Engine Queue Worker
+    const batchResult = await globalMultiEngineWorker.executeBatch(
+      supabase,
+      tasks,
+      {
+        concurrency: 4,
+        maxRetries: 3,
+        dryRun,
       }
-    }
+    );
 
     // 7. Complete and log cron run to CronLogs table
     const completedLog = await CronLoggerService.completeCronRun(supabase, {
@@ -219,29 +152,32 @@ async function handleCronTracking(req: NextRequest) {
       jobName: 'track-citations',
       processedCampaigns: campaigns.length,
       processedQueries: tasks.length,
-      successfulQueries,
-      failedQueries,
-      engine: 'gemini-1.5-flash',
+      successfulQueries: batchResult.successful,
+      failedQueries: batchResult.failed,
+      engine: targetEngines.join(', '),
       details: {
         dryRun,
         totalTasks: tasks.length,
-        summary: queryExecutionResults.slice(0, 10),
+        skipped: batchResult.skipped,
+        targetEngines,
+        summary: batchResult.results.slice(0, 15),
       },
     });
 
     return NextResponse.json({
       success: true,
       timestamp: new Date().toISOString(),
-      schedule: '0 0 * * * (Daily at 00:00 UTC)',
-      engine: 'gemini-1.5-flash',
+      schedule: '0 0 * * 0 (Weekly Sunday at 00:00 UTC)',
+      engines: targetEngines,
       pooling: 'Supavisor (port 6543 / pooled)',
       processedCampaigns: campaigns.length,
       processedQueries: tasks.length,
-      successfulQueries,
-      failedQueries,
+      successfulQueries: batchResult.successful,
+      failedQueries: batchResult.failed,
+      skippedQueries: batchResult.skipped,
       durationMs: completedLog.duration_ms,
       cronLog: completedLog,
-      results: queryExecutionResults,
+      results: batchResult.results,
     });
   } catch (err: any) {
     console.error('Unhandled failure in citation tracking cron:', err);
@@ -253,7 +189,7 @@ async function handleCronTracking(req: NextRequest) {
           startedAt,
           jobName: 'track-citations',
           errorMessage: err?.message || 'Unknown cron tracking error',
-          engine: 'gemini-1.5-flash',
+          engine: 'multi-engine-suite',
         });
       } catch (logErr) {
         console.error('Failed to write failure cron log:', logErr);
