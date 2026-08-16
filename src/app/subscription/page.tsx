@@ -149,69 +149,69 @@ export default function SubscriptionPage() {
     {
       id: 'starter' as const,
       name: 'Starter',
-      badge: 'Free Tier',
-      priceMonthly: 0,
-      priceAnnual: 0,
-      competitorLimit: '1 Competitor',
-      campaignLimit: '3 Campaigns',
-      promptsLimit: '25 Daily Prompts',
-      description: 'Ideal for emerging brands and solo founders testing generative AI search visibility.',
+      badge: 'Single Brand',
+      priceMonthly: 79,
+      priceAnnual: 63,
+      competitorLimit: 'Up to 3 Competitors',
+      campaignLimit: '1 Campaign',
+      promptsLimit: '50 Prompts',
+      description: 'Ideal for emerging brands and solo marketers establishing generative AI search visibility.',
       features: [
-        'Max 1 Competitor monitored',
-        '3 Active tracking campaigns',
-        '25 Daily prompts crawled',
-        'Gemini, ChatGPT & Perplexity coverage',
+        '1 Brand Campaign',
+        '50 Monitored prompts',
+        '4 Core LLMs (Gemini, ChatGPT, Perplexity, Claude)',
+        'Weekly automated tracking runs (4x/mo)',
+        'Up to 3 Competitors monitored',
         'Weekly email intelligence digest',
-        'Standard community support',
       ],
       isPopular: false,
-      buttonText: currentTier === 'starter' ? 'Current Plan' : 'Downgrade to Starter',
+      buttonText: currentTier === 'starter' ? 'Current Plan' : 'Select Starter ($79/mo)',
     },
     {
       id: 'growth' as const,
       name: 'Growth',
       badge: 'Most Popular',
-      priceMonthly: 149,
-      priceAnnual: 119,
+      priceMonthly: 199,
+      priceAnnual: 159,
       competitorLimit: '10 Competitors',
-      campaignLimit: '20 Campaigns',
-      promptsLimit: '150 Daily Prompts',
-      description: 'Designed for fast-scaling brands needing deep competitor benchmarking & GEO optimization.',
+      campaignLimit: '5 Campaigns',
+      promptsLimit: '250 Prompts',
+      description: 'Designed for fast-scaling brands needing multi-campaign benchmarking & GEO optimization.',
       features: [
-        'Max 10 Competitors monitored',
-        '20 Active tracking campaigns',
-        '150 Daily prompts crawled',
+        '5 Brand Campaigns',
+        '250 Monitored prompts',
+        '6 Top-Tier LLMs (+ GPT-4o & Claude 3.5 Sonnet)',
+        'Weekly automated tracking runs (4x/mo)',
+        'Up to 10 Competitors monitored',
         'GEO Optimizer Engine synchronization',
-        'Hourly AI visibility re-indexing',
         'Automated citation anomaly alerts',
         'CSV & PDF Executive Report export',
-        'Priority email & Slack support',
       ],
       isPopular: true,
-      buttonText: currentTier === 'growth' ? 'Current Plan' : 'Upgrade to Growth',
+      buttonText: currentTier === 'growth' ? 'Current Plan' : 'Upgrade to Growth ($199/mo)',
     },
     {
       id: 'enterprise' as const,
-      name: 'Enterprise',
+      name: 'Agency Pro',
       badge: 'Maximum Scale',
       priceMonthly: 499,
       priceAnnual: 399,
-      competitorLimit: 'Unlimited Competitors',
-      campaignLimit: 'Unlimited Campaigns',
-      promptsLimit: '1,000+ Daily Prompts',
-      description: 'Full-scale market dominance for high-volume enterprises and growth agencies.',
+      competitorLimit: '50 Competitors',
+      campaignLimit: '20 Campaigns',
+      promptsLimit: '1,000 Prompts',
+      description: 'Full multi-brand governance, enterprise prompt volume, and on-demand trigger pipelines.',
       features: [
-        'Unlimited Competitors monitored',
-        'Unlimited Active tracking campaigns',
-        '1,000+ Daily prompts crawled',
-        'Custom LLM fine-tuning & webhook pipeline',
+        '20 Brand Campaigns',
+        '1,000 Monitored prompts',
+        '6 LLMs + Custom model fine-tuning',
+        'Priority Weekly Runs & On-Demand Triggers',
+        'Up to 50 Competitors monitored',
         'AEO Schema injection automation',
-        'Dedicated data warehouse sync',
-        '99.9% SLA & Custom contracts',
-        'Dedicated AI visibility strategist',
+        'Dedicated data warehouse sync & API',
+        'Dedicated AI visibility strategist & SLAs',
       ],
       isPopular: false,
-      buttonText: currentTier === 'enterprise' ? 'Current Plan' : 'Upgrade to Enterprise',
+      buttonText: currentTier === 'enterprise' ? 'Current Plan' : 'Upgrade to Agency Pro ($499/mo)',
     },
   ];
 
@@ -467,35 +467,41 @@ export default function SubscriptionPage() {
               <thead>
                 <tr className="border-b border-slate-200 text-slate-400 font-semibold uppercase tracking-wider">
                   <th className="py-3 px-4">Feature / Guardrail</th>
-                  <th className="py-3 px-4">Starter</th>
-                  <th className="py-3 px-4 text-indigo-600">Growth</th>
-                  <th className="py-3 px-4">Enterprise</th>
+                  <th className="py-3 px-4">Starter ($79/mo)</th>
+                  <th className="py-3 px-4 text-indigo-600">Growth ($199/mo)</th>
+                  <th className="py-3 px-4">Agency Pro ($499/mo)</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 text-slate-700">
                 <tr>
                   <td className="py-3.5 px-4 font-semibold text-slate-900">Competitors Monitored</td>
-                  <td className="py-3.5 px-4">Max 1</td>
+                  <td className="py-3.5 px-4">Max 3</td>
                   <td className="py-3.5 px-4 font-semibold text-indigo-700">Max 10</td>
-                  <td className="py-3.5 px-4 font-semibold text-emerald-700">Unlimited</td>
+                  <td className="py-3.5 px-4 font-semibold text-emerald-700">Max 50</td>
                 </tr>
                 <tr>
                   <td className="py-3.5 px-4 font-semibold text-slate-900">Active Tracking Campaigns</td>
-                  <td className="py-3.5 px-4">3 Campaigns</td>
-                  <td className="py-3.5 px-4">20 Campaigns</td>
-                  <td className="py-3.5 px-4 font-semibold text-emerald-700">Unlimited</td>
+                  <td className="py-3.5 px-4">1 Campaign</td>
+                  <td className="py-3.5 px-4">5 Campaigns</td>
+                  <td className="py-3.5 px-4 font-semibold text-emerald-700">20 Campaigns</td>
                 </tr>
                 <tr>
-                  <td className="py-3.5 px-4 font-semibold text-slate-900">Daily Prompts Extraction Quota</td>
-                  <td className="py-3.5 px-4">25 / day</td>
-                  <td className="py-3.5 px-4">150 / day</td>
-                  <td className="py-3.5 px-4">1,000+ / day</td>
+                  <td className="py-3.5 px-4 font-semibold text-slate-900">Monitored Prompts Quota</td>
+                  <td className="py-3.5 px-4">50 Prompts</td>
+                  <td className="py-3.5 px-4">250 Prompts</td>
+                  <td className="py-3.5 px-4">1,000 Prompts</td>
                 </tr>
                 <tr>
                   <td className="py-3.5 px-4 font-semibold text-slate-900">AI Search Engine Models</td>
-                  <td className="py-3.5 px-4">Gemini, ChatGPT, Perplexity</td>
-                  <td className="py-3.5 px-4">All Models + Copilot</td>
-                  <td className="py-3.5 px-4">Custom Models & Raw API</td>
+                  <td className="py-3.5 px-4">4 Models (Gemini, ChatGPT, Perplexity, Claude)</td>
+                  <td className="py-3.5 px-4">6 Models (+ GPT-4o & Sonnet)</td>
+                  <td className="py-3.5 px-4">6 Models + Custom Fine-Tuning</td>
+                </tr>
+                <tr>
+                  <td className="py-3.5 px-4 font-semibold text-slate-900">Tracking Frequency</td>
+                  <td className="py-3.5 px-4">Weekly (4x/month)</td>
+                  <td className="py-3.5 px-4">Weekly (4x/month)</td>
+                  <td className="py-3.5 px-4 text-emerald-600 font-semibold">Priority Weekly + On-Demand</td>
                 </tr>
                 <tr>
                   <td className="py-3.5 px-4 font-semibold text-slate-900">GEO Optimizer Engine</td>

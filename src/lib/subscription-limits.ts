@@ -7,27 +7,31 @@ export interface TierLimitConfig {
   maxCampaigns: number;
   maxCompetitors: number;
   maxDailyPrompts: number;
+  maxTrackedPrompts: number;
   displayName: string;
 }
 
 export const TIER_LIMITS: Record<SubscriptionTier, TierLimitConfig> = {
   starter: {
-    maxCampaigns: 3,
-    maxCompetitors: 1, // Starter: Max 1 competitor
-    maxDailyPrompts: 25,
-    displayName: 'Starter',
+    maxCampaigns: 1, // Starter: 1 Brand Campaign
+    maxCompetitors: 3, // Starter: Up to 3 competitors
+    maxDailyPrompts: 50,
+    maxTrackedPrompts: 50, // 50 Prompts
+    displayName: 'Starter ($79/mo)',
   },
   growth: {
-    maxCampaigns: 20,
-    maxCompetitors: 10, // Growth: Max 10 competitors
-    maxDailyPrompts: 150,
-    displayName: 'Growth',
+    maxCampaigns: 5, // Growth: 5 Brand Campaigns
+    maxCompetitors: 10, // Growth: Up to 10 competitors
+    maxDailyPrompts: 250,
+    maxTrackedPrompts: 250, // 250 Prompts
+    displayName: 'Growth ($199/mo)',
   },
   enterprise: {
-    maxCampaigns: Infinity, // Enterprise: Unlimited campaigns
-    maxCompetitors: Infinity, // Enterprise: Unlimited competitors
+    maxCampaigns: 20, // Agency Pro: 20 Brand Campaigns
+    maxCompetitors: 50, // Agency Pro: Up to 50 competitors
     maxDailyPrompts: 1000,
-    displayName: 'Enterprise',
+    maxTrackedPrompts: 1000, // 1,000 Prompts
+    displayName: 'Agency Pro ($499/mo)',
   },
 };
 

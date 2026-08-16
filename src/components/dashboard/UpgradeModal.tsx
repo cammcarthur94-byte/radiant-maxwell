@@ -91,35 +91,35 @@ export function UpgradeModal({
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-bold text-indigo-600 uppercase">Growth</span>
                   <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-200">
-                    Max 10 Competitors
+                    5 Campaigns &bull; 250 Prompts
                   </span>
                 </div>
                 <h3 className="text-lg font-bold text-slate-900 mt-1">Growth Plan</h3>
                 <div className="mt-2 flex items-baseline gap-1">
-                  <span className="text-3xl font-extrabold text-slate-900">$149</span>
+                  <span className="text-3xl font-extrabold text-slate-900">$199</span>
                   <span className="text-xs text-slate-500">/ month</span>
                 </div>
 
                 <ul className="mt-4 space-y-2.5 text-xs text-slate-600">
                   <li className="flex items-center gap-2">
                     <Check className="w-4 h-4 text-emerald-600 flex-shrink-0" />
-                    <span><strong>10</strong> competitors monitored (vs 1 on Starter)</span>
+                    <span><strong>5</strong> brand campaigns (vs 1 on Starter)</span>
                   </li>
                   <li className="flex items-center gap-2">
                     <Check className="w-4 h-4 text-emerald-600 flex-shrink-0" />
-                    <span><strong>20</strong> active campaigns</span>
+                    <span><strong>250</strong> monitored prompt keywords</span>
                   </li>
                   <li className="flex items-center gap-2">
                     <Check className="w-4 h-4 text-emerald-600 flex-shrink-0" />
-                    <span><strong>150</strong> daily prompt queries crawled</span>
+                    <span><strong>6</strong> AI engines (+ GPT-4o & Claude Sonnet)</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <Check className="w-4 h-4 text-emerald-600 flex-shrink-0" />
+                    <span>Up to <strong>10</strong> competitors monitored</span>
                   </li>
                   <li className="flex items-center gap-2">
                     <Check className="w-4 h-4 text-emerald-600 flex-shrink-0" />
                     <span>GEO Optimizer Engine synchronization</span>
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <Check className="w-4 h-4 text-emerald-600 flex-shrink-0" />
-                    <span>Hourly citation monitoring</span>
                   </li>
                 </ul>
               </div>
@@ -137,26 +137,26 @@ export function UpgradeModal({
                 ) : currentPlan === 'growth' ? (
                   <span>Current Active Plan</span>
                 ) : (
-                  <span>Upgrade to Growth ($149/mo)</span>
+                  <span>Upgrade to Growth ($199/mo)</span>
                 )}
               </button>
             </div>
 
-            {/* Enterprise Plan (Featured) */}
+            {/* Enterprise / Agency Pro Plan (Featured) */}
             <div className="border-2 border-indigo-600 rounded-2xl p-5 space-y-4 relative bg-indigo-50/40 shadow-md flex flex-col justify-between">
               <span className="absolute -top-3 right-4 bg-indigo-600 text-white text-[10px] font-bold px-2.5 py-0.5 rounded-full uppercase tracking-wider shadow-sm flex items-center gap-1">
                 <Crown className="w-3 h-3" />
-                <span>Unlimited Scale</span>
+                <span>Enterprise Scale</span>
               </span>
 
               <div>
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-bold text-purple-700 uppercase">Enterprise</span>
+                  <span className="text-xs font-bold text-purple-700 uppercase">Agency Pro</span>
                   <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-purple-100 text-purple-800 border border-purple-200">
-                    Unlimited Competitors
+                    20 Campaigns &bull; 1,000 Prompts
                   </span>
                 </div>
-                <h3 className="text-lg font-bold text-slate-900 mt-1">Enterprise Plan</h3>
+                <h3 className="text-lg font-bold text-slate-900 mt-1">Agency Pro Plan</h3>
                 <div className="mt-2 flex items-baseline gap-1">
                   <span className="text-3xl font-extrabold text-slate-900">$499</span>
                   <span className="text-xs text-slate-500">/ month</span>
@@ -165,15 +165,19 @@ export function UpgradeModal({
                 <ul className="mt-4 space-y-2.5 text-xs text-slate-700 font-medium">
                   <li className="flex items-center gap-2">
                     <Check className="w-4 h-4 text-indigo-600 flex-shrink-0" />
-                    <span><strong>Unlimited</strong> competitors monitored</span>
+                    <span><strong>20</strong> brand campaigns</span>
                   </li>
                   <li className="flex items-center gap-2">
                     <Check className="w-4 h-4 text-indigo-600 flex-shrink-0" />
-                    <span><strong>Unlimited</strong> active campaigns</span>
+                    <span><strong>1,000</strong> monitored prompt keywords</span>
                   </li>
                   <li className="flex items-center gap-2">
                     <Check className="w-4 h-4 text-indigo-600 flex-shrink-0" />
-                    <span><strong>1,000+</strong> daily prompts crawled</span>
+                    <span><strong>Priority</strong> weekly crawls & on-demand triggers</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <Check className="w-4 h-4 text-indigo-600 flex-shrink-0" />
+                    <span>Up to <strong>50</strong> competitors monitored</span>
                   </li>
                   <li className="flex items-center gap-2">
                     <Check className="w-4 h-4 text-indigo-600 flex-shrink-0" />
@@ -200,7 +204,7 @@ export function UpgradeModal({
                   <span>Current Active Plan</span>
                 ) : (
                   <>
-                    <span>Upgrade to Enterprise ($499/mo)</span>
+                    <span>Upgrade to Agency Pro ($499/mo)</span>
                     <ArrowRight className="w-3.5 h-3.5" />
                   </>
                 )}
